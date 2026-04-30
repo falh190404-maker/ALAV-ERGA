@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ÁLAV ERGA — Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --negro: #080808;
+    --amarillo: #F5B800;
+    --amarillo-claro: #FFD84D;
+    --rojo: #E63B2E;
+    --verde: #2ECC71;
+    --blanco: #F0EBE0;
+    --gris1: #141414;
+    --gris2: #1e1e1e;
+    --gris3: #2a2a2a;
+    --gris4: #888;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--negro);
+    color: var(--blanco);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 80px;
+  }
+
+  /* SETUP BANNER */
+  #setup-banner {
+    background: linear-gradient(135deg, rgba(245,184,0,0.15), rgba(245,184,0,0.05));
+    border: 1px solid rgba(245,184,0,0.5);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+
+  #setup-banner h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--amarillo);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  #setup-banner p { font-size: 13px; color: #ccc; margin-bottom: 12px; line-height: 1.5; }
+
+  #url-input {
+    background: var(--gris3);
+    border: 1px solid var(--amarillo);
+    border-radius: 8px;
+    color: var(--blanco);
+    padding: 10px 12px;
+    font-size: 13px;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--gris1);
+    border-radius: 14px;
+    padding: 5px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 72px;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--gris4);
+    border: none;
+    background: transparent;
+    white-space: nowrap;
+  }
+
+  .tab.active { background: var(--amarillo); color: var(--negro); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .header { text-align: center; margin-bottom: 24px; }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    line-height: 1;
+  }
+
+  .logo .alav { color: var(--amarillo); }
+  .logo .erga { color: var(--rojo); }
+  .subtitle { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gris4); margin-top: 4px; }
+
+  /* SYNC STATUS */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--gris4);
+    margin-bottom: 20px;
+    padding: 8px 12px;
+    background: var(--gris1);
+    border-radius: 8px;
+  }
+
+  .sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gris4);
+    flex-shrink: 0;
+  }
+
+  .sync-dot.verde { background: var(--verde); animation: pulse 2s infinite; }
+  .sync-dot.rojo  { background: var(--rojo); }
+  .sync-dot.amarillo { background: var(--amarillo); animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* CARDS */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .card { background: var(--gris2); border-radius: 14px; padding: 16px 14px; border: 1px solid var(--gris3); }
+  .card.full { grid-column: 1 / -1; }
+  .card.amarillo-border { border-color: rgba(245,184,0,0.4); }
+  .card.rojo-border { border-color: rgba(230,59,46,0.4); }
+  .card.verde-border { border-color: rgba(46,204,113,0.3); }
+  .card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gris4); margin-bottom: 6px; }
+  .card-valor { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; line-height: 1; }
+  .card-valor.amarillo { color: var(--amarillo); }
+  .card-valor.rojo { color: var(--rojo); }
+  .card-valor.verde { color: var(--verde); }
+  .card-valor.blanco { color: var(--blanco); }
+  .card-sub { font-size: 11px; color: var(--gris4); margin-top: 5px; }
+
+  .sec-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--amarillo);
+    border-bottom: 2px solid var(--amarillo);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sec-wrap { margin-bottom: 28px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead tr { background: var(--amarillo); }
+  thead th { padding: 9px 10px; text-align: left; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--negro); }
+  tbody tr { border-bottom: 1px solid var(--gris3); transition: background 0.15s; }
+  tbody tr:hover { background: var(--gris2); }
+  tbody tr:nth-child(even) { background: #101010; }
+  td { padding: 10px; vertical-align: middle; }
+  td.num { text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--amarillo-claro); }
+
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  .tag-verde { background: rgba(46,204,113,0.15); color: #4cd97a; }
+  .tag-amarillo { background: rgba(245,184,0,0.15); color: var(--amarillo); }
+  .tag-star { background: rgba(46,204,113,0.2); color: #4cd97a; }
+
+  /* FORM */
+  .ventas-form { background: var(--gris2); border-radius: 14px; padding: 18px; border: 1px solid var(--gris3); margin-bottom: 20px; }
+  .form-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--amarillo); letter-spacing: 2px; margin-bottom: 16px; }
+
+  input[type="date"], input[type="number"] {
+    background: var(--gris3);
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: var(--blanco);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  input:focus { outline: none; border-color: var(--amarillo); }
+
+  .form-fecha { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .form-fecha label { font-size: 12px; color: var(--gris4); white-space: nowrap; }
+  .form-fecha input { flex: 1; }
+
+  .productos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+
+  .prod-item { background: var(--gris1); border-radius: 10px; padding: 12px; border: 1px solid var(--gris3); }
+  .prod-nombre { font-size: 11px; font-weight: 600; color: var(--blanco); margin-bottom: 4px; line-height: 1.3; }
+  .prod-precio { font-size: 10px; color: var(--gris4); margin-bottom: 8px; }
+  .prod-input-row { display: flex; align-items: center; gap: 6px; }
+  .prod-input-row span { font-size: 11px; color: var(--gris4); }
+  .prod-input-row input { width: 65px; text-align: right; }
+
+  .preview-box {
+    background: var(--gris1);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  .preview-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .preview-row:last-child { margin-bottom: 0; }
+  .preview-lbl { color: var(--gris4); }
+
+  .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--amarillo); color: var(--negro); }
+  .btn-primary:hover { background: var(--amarillo-claro); }
+  .btn-primary:disabled { background: var(--gris3); color: var(--gris4); cursor: not-allowed; }
+  .btn-sm { background: rgba(230,59,46,0.15); color: var(--rojo); border: 1px solid rgba(230,59,46,0.3); font-size: 12px; padding: 7px 12px; width: auto; border-radius: 8px; cursor: pointer; }
+
+  /* HISTORIAL */
+  .historial-item { background: var(--gris2); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid var(--gris3); }
+  .historial-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .historial-fecha { font-size: 12px; color: var(--gris4); }
+  .historial-total { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--verde); }
+  .historial-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { background: var(--gris3); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #aaa; }
+  .historial-util { font-size: 12px; margin-top: 8px; color: #4cd97a; }
+
+  /* DEUDA */
+  .deuda-card {
+    background: linear-gradient(135deg, rgba(230,59,46,0.12), rgba(230,59,46,0.04));
+    border: 1px solid rgba(230,59,46,0.35);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .deuda-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--rojo); letter-spacing: 2px; margin-bottom: 14px; }
+  .deuda-fila { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+  .deuda-fila .lbl { color: var(--gris4); }
+  .barra-wrap { background: var(--gris3); border-radius: 10px; height: 12px; overflow: hidden; margin: 10px 0 6px; }
+  .barra-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+  .barra-rojo { background: linear-gradient(to right, var(--rojo), #ff6b5e); }
+  .barra-verde { background: linear-gradient(to right, #27ae60, var(--verde)); }
+  .barra-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--gris4); }
+
+  .resumen-sem { background: var(--gris2); border-radius: 14px; padding: 16px; border: 1px solid var(--gris3); margin-bottom: 16px; }
+  .resumen-fila { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--gris3); font-size: 13px; }
+  .resumen-fila:last-child { border-bottom: none; }
+  .resumen-fila .lbl { color: var(--gris4); }
+  .resumen-fila .val { font-weight: 600; }
+  .resumen-fila .val.verde { color: var(--verde); }
+  .resumen-fila .val.rojo { color: var(--rojo); }
+  .resumen-fila .val.amarillo { color: var(--amarillo); }
+
+  .alert-box { border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 10px; font-size: 13px; align-items: flex-start; line-height: 1.5; }
+  .alert-box.amarillo { background: rgba(245,184,0,0.08); border: 1px solid rgba(245,184,0,0.25); color: var(--amarillo); }
+  .alert-box.verde { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25); color: #4cd97a; }
+
+  .empty-state { text-align: center; padding: 30px 20px; color: var(--gris4); font-size: 13px; }
+  .empty-state .icono { font-size: 32px; margin-bottom: 10px; }
+
+  .loading { text-align: center; padding: 20px; color: var(--gris4); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo"><span class="alav">ÁLAV</span> <span class="erga">ERGA</span></div>
+  <div class="subtitle">Dashboard Financiero</div>
+</div>
+
+<!-- SETUP BANNER (se oculta cuando hay URL guardada) -->
+<div id="setup-banner">
+  <h3>⚙️ Conectar con Google Sheets</h3>
+  <p>Pega aquí la URL de tu Apps Script para guardar datos en la nube. Solo lo haces una vez.</p>
+  <input type="text" id="url-input" placeholder="https://script.google.com/macros/s/TU-URL/exec">
+  <button class="btn btn-primary" onclick="guardarURL()" style="font-size:14px;padding:12px">✓ GUARDAR URL Y CONECTAR</button>
+</div>
+
+<!-- SYNC STATUS -->
+<div class="sync-bar" id="sync-bar">
+  <div class="sync-dot amarillo" id="sync-dot"></div>
+  <span id="sync-texto">Cargando datos...</span>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('inicio', this)">🏠 Inicio</button>
+  <button class="tab" onclick="showTab('ventas', this)">📝 Ventas</button>
+  <button class="tab" onclick="showTab('costos', this)">💰 Costos</button>
+  <button class="tab" onclick="showTab('deuda', this)">📉 Deuda</button>
+</div>
+
+<!-- ====== INICIO ====== -->
+<div id="tab-inicio" class="page active">
+  <div class="cards">
+    <div class="card amarillo-border">
+      <div class="card-label">Ventas del mes</div>
+      <div class="card-valor amarillo" id="res-ventas-mes">$0</div>
+      <div class="card-sub">Meta: $18,000</div>
+    </div>
+    <div class="card verde-border">
+      <div class="card-label">Utilidad neta</div>
+      <div class="card-valor verde" id="res-utilidad-mes">$0</div>
+      <div class="card-sub">Después de gastos</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Noches registradas</div>
+      <div class="card-valor blanco" id="res-noches">0</div>
+      <div class="card-sub">Este mes</div>
+    </div>
+    <div class="card rojo-border">
+      <div class="card-label">Deuda restante</div>
+      <div class="card-valor rojo" id="res-deuda">$4,000</div>
+      <div class="card-sub">Deuda inicial: $4,000</div>
+    </div>
+    <div class="card full">
+      <div class="card-label">Progreso meta mensual ($18,000)</div>
+      <div class="barra-wrap" style="margin-top:8px">
+        <div class="barra-fill barra-verde" id="barra-meta" style="width:0%"></div>
+      </div>
+      <div class="barra-labels">
+        <span id="meta-pct">0% alcanzado</span>
+        <span id="meta-falta">Faltan $18,000</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-wrap">
+    <div class="sec-title">📊 Resumen semanal</div>
+    <div class="resumen-sem">
+      <div class="resumen-fila"><span class="lbl">Ventas brutas semana</span><span class="val amarillo" id="sum-ventas">$0</span></div>
+      <div class="resumen-fila"><span class="lbl">Costo de productos</span><span class="val rojo" id="sum-costos">$0</span></div>
+      <div class="resumen-fila"><span class="lbl">Utilidad bruta</span><span class="val verde" id="sum-util-bruta">$0</span></div>
+      <div class="resumen-fila"><span class="lbl">Gastos fijos semana</span><span class="val rojo">-$1,310</span></div>
+      <div class="resumen-fila"><span class="lbl" style="font-weight:700;color:var(--blanco)">Utilidad neta semana</span><span class="val verde" id="sum-util-neta">$0</span></div>
+    </div>
+  </div>
+
+  <div class="sec-wrap">
+    <div class="sec-title">🏆 Ranking de productos</div>
+    <table>
+      <thead><tr><th>Producto</th><th>Margen</th><th style="text-align:right">Utilidad</th></tr></thead>
+      <tbody>
+        <tr><td>Boneless Chico s/papas</td><td><span class="tag tag-star">🌟 73%</span></td><td class="num">$72.99</td></tr>
+        <tr><td>Boneless Chico c/papas</td><td><span class="tag tag-star">🌟 69%</span></td><td class="num">$82.20</td></tr>
+        <tr><td>Papas solas</td><td><span class="tag tag-star">🌟 67%</span></td><td class="num">$43.35</td></tr>
+        <tr><td>Ranch (vaso)</td><td><span class="tag tag-star">🌟 66%</span></td><td class="num">$6.63</td></tr>
+        <tr><td>Alitas Chica c/papas</td><td><span class="tag tag-star">🌟 64%</span></td><td class="num">$70.19</td></tr>
+        <tr><td>Alitas Chica s/papas</td><td><span class="tag tag-verde">60%</span></td><td class="num">$53.79</td></tr>
+        <tr><td>Boneless Grande c/papas</td><td><span class="tag tag-verde">53%</span></td><td class="num">$85.52</td></tr>
+        <tr><td>Alitas Grande c/papas</td><td><span class="tag tag-verde">47%</span></td><td class="num">$70.10</td></tr>
+        <tr><td>Refresco</td><td><span class="tag tag-verde">36%</span></td><td class="num">$9.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ====== VENTAS ====== -->
+<div id="tab-ventas" class="page">
+  <div class="ventas-form">
+    <div class="form-title">📝 Registrar noche</div>
+    <div class="form-fecha">
+      <label>Fecha:</label>
+      <input type="date" id="venta-fecha">
+    </div>
+    <div class="productos-grid">
+      <div class="prod-item"><div class="prod-nombre">Alitas Grande c/papas</div><div class="prod-precio">$150 · util $70.10</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p1" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Alitas Chica c/papas</div><div class="prod-precio">$110 · util $70.19</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p2" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Alitas Chica s/papas</div><div class="prod-precio">$90 · util $53.79</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p3" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Boneless Grande c/papas</div><div class="prod-precio">$160 · util $85.52</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p4" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Boneless Chico c/papas</div><div class="prod-precio">$120 · util $82.20</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p5" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Boneless Chico s/papas</div><div class="prod-precio">$100 · util $72.99</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p6" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Papas solas</div><div class="prod-precio">$65 · util $43.35</div><div class="prod-input-row"><span>Órdenes:</span><input type="number" id="p7" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Refresco</div><div class="prod-precio">$25 · util $9.00</div><div class="prod-input-row"><span>Pzas:</span><input type="number" id="p8" min="0" value="0"></div></div>
+      <div class="prod-item"><div class="prod-nombre">Ranch (vaso)</div><div class="prod-precio">$10 · util $6.63</div><div class="prod-input-row"><span>Vasos:</span><input type="number" id="p9" min="0" value="0"></div></div>
+    </div>
+    <div class="preview-box">
+      <div class="preview-row"><span class="preview-lbl">Venta total noche:</span><span style="color:var(--amarillo);font-family:'Bebas Neue';font-size:18px" id="preview-venta">$0</span></div>
+      <div class="preview-row"><span class="preview-lbl">Costo productos:</span><span style="color:#ff6b5e;font-family:'Bebas Neue';font-size:18px" id="preview-costo">$0</span></div>
+      <div class="preview-row"><span class="preview-lbl">Utilidad bruta:</span><span style="color:var(--verde);font-family:'Bebas Neue';font-size:18px" id="preview-util">$0</span></div>
+    </div>
+    <button class="btn btn-primary" id="btn-guardar" onclick="registrarVenta()">✓ GUARDAR NOCHE</button>
+  </div>
+
+  <div class="sec-wrap">
+    <div class="sec-title">📋 Historial de noches</div>
+    <div id="historial-container"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- ====== COSTOS ====== -->
+<div id="tab-costos" class="page">
+  <div class="sec-wrap">
+    <div class="sec-title">🥩 Proteína</div>
+    <table>
+      <thead><tr><th>Insumo</th><th style="text-align:right">$/kg</th><th style="text-align:right">$/100gr</th></tr></thead>
+      <tbody>
+        <tr><td>Alitas de pollo</td><td class="num">$60</td><td class="num">$6.00</td></tr>
+        <tr><td>Boneless</td><td class="num">$130</td><td class="num">$13.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec-wrap">
+    <div class="sec-title">🍟 Porciones por orden</div>
+    <table>
+      <thead><tr><th>Insumo</th><th>Orden Grande</th><th style="text-align:right">Orden Chica</th></tr></thead>
+      <tbody>
+        <tr><td>Alitas</td><td>12 pzas / 1 kg</td><td class="num">6 pzas / 500gr</td></tr>
+        <tr><td>Boneless</td><td>320 gr</td><td class="num">160 gr</td></tr>
+        <tr><td>Papas</td><td>150 gr</td><td class="num">75 gr</td></tr>
+        <tr><td>Salsa</td><td>50 gr</td><td class="num">25 gr</td></tr>
+        <tr><td>Maggi + Inglesa</td><td>15 ml</td><td class="num">7.5 ml</td></tr>
+        <tr><td>Queso</td><td>80 gr</td><td class="num">—</td></tr>
+        <tr><td>Catsup</td><td>30 gr</td><td class="num">—</td></tr>
+        <tr><td>Valentina</td><td>20 gr</td><td class="num">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec-wrap">
+    <div class="sec-title">💰 Costo real por producto</div>
+    <table>
+      <thead><tr><th>Producto</th><th style="text-align:right">Costo</th><th style="text-align:right">Venta</th><th style="text-align:right">Margen</th></tr></thead>
+      <tbody>
+        <tr><td>Alitas Grande c/papas</td><td class="num">$79.90</td><td class="num">$150</td><td><span class="tag tag-verde">47%</span></td></tr>
+        <tr><td>Alitas Chica c/papas</td><td class="num">$39.81</td><td class="num">$110</td><td><span class="tag tag-star">🌟 64%</span></td></tr>
+        <tr><td>Alitas Chica s/papas</td><td class="num">$36.21</td><td class="num">$90</td><td><span class="tag tag-star">🌟 60%</span></td></tr>
+        <tr><td>Boneless Grande c/papas</td><td class="num">$74.48</td><td class="num">$160</td><td><span class="tag tag-verde">53%</span></td></tr>
+        <tr><td>Boneless Chico c/papas</td><td class="num">$37.80</td><td class="num">$120</td><td><span class="tag tag-star">🌟 69%</span></td></tr>
+        <tr><td>Boneless Chico s/papas</td><td class="num">$27.01</td><td class="num">$100</td><td><span class="tag tag-star">🌟 73%</span></td></tr>
+        <tr><td>Papas solas</td><td class="num">$21.65</td><td class="num">$65</td><td><span class="tag tag-star">🌟 67%</span></td></tr>
+        <tr><td>Refresco</td><td class="num">$16.00</td><td class="num">$25</td><td><span class="tag tag-verde">36%</span></td></tr>
+        <tr><td>Ranch (vaso)</td><td class="num">$3.37</td><td class="num">$10</td><td><span class="tag tag-star">🌟 66%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec-wrap">
+    <div class="sec-title">💸 Gastos fijos</div>
+    <table>
+      <thead><tr><th>Concepto</th><th style="text-align:right">Mensual</th><th style="text-align:right">Por noche</th></tr></thead>
+      <tbody>
+        <tr><td>Renta</td><td class="num">$1,000</td><td class="num">$83</td></tr>
+        <tr><td>Gas</td><td class="num">$240</td><td class="num">$20</td></tr>
+        <tr><td>Sueldos (2 personas)</td><td class="num">$4,000</td><td class="num">$333</td></tr>
+        <tr style="background:rgba(245,184,0,0.05)"><td><strong>TOTAL</strong></td><td class="num" style="color:var(--rojo)">$5,240</td><td class="num" style="color:var(--rojo)">$436</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ====== DEUDA ====== -->
+<div id="tab-deuda" class="page">
+  <div class="deuda-card">
+    <div class="deuda-title">🔴 Control de Deuda</div>
+    <div class="deuda-fila"><span class="lbl">Deuda inicial</span><span style="font-weight:700">$4,000</span></div>
+    <div class="deuda-fila"><span class="lbl">Pagado hasta hoy</span><span style="color:var(--verde);font-weight:700" id="deuda-pagado">$0</span></div>
+    <div class="barra-wrap"><div class="barra-fill barra-rojo" id="barra-deuda" style="width:0%"></div></div>
+    <div class="barra-labels"><span id="deuda-pct">0% pagado</span><span style="color:var(--rojo);font-weight:700" id="deuda-restante">Restante: $4,000</span></div>
+  </div>
+
+  <div class="sec-wrap">
+    <div class="sec-title">💳 Registrar abono</div>
+    <div class="ventas-form">
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;color:var(--gris4);display:block;margin-bottom:6px">Monto del abono ($)</label>
+        <input type="number" id="abono-monto" min="0" placeholder="Ej: 500" style="width:100%">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;color:var(--gris4);display:block;margin-bottom:6px">Fecha</label>
+        <input type="date" id="abono-fecha" style="width:100%">
+      </div>
+      <button class="btn btn-primary" id="btn-abono" onclick="registrarAbono()">✓ REGISTRAR ABONO</button>
+    </div>
+  </div>
+
+  <div class="sec-wrap">
+    <div class="sec-title">📋 Historial de abonos</div>
+    <div id="abonos-container"><div class="loading">Cargando...</div></div>
+  </div>
+
+  <div class="alert-box amarillo">
+    <span>💡</span>
+    <div>Con tu utilidad estimada de <strong>$4,660/mes</strong>, puedes liquidar esta deuda en <strong>menos de 1 mes</strong> apartando $1,000 por semana.</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+const DEUDA_INICIAL = 4000;
+const META_MES = 18000;
+const GASTOS_FIJOS_MES = 5240;
+const GASTOS_FIJOS_SEM = 1310;
+
+const productos = [
+  { id:'p1', nombre:'Alitas Grande c/papas',   precio:150,  costo:79.90,  util:70.10 },
+  { id:'p2', nombre:'Alitas Chica c/papas',    precio:110,  costo:39.81,  util:70.19 },
+  { id:'p3', nombre:'Alitas Chica s/papas',    precio:90,   costo:36.21,  util:53.79 },
+  { id:'p4', nombre:'Boneless Grande c/papas', precio:160,  costo:74.48,  util:85.52 },
+  { id:'p5', nombre:'Boneless Chico c/papas',  precio:120,  costo:37.80,  util:82.20 },
+  { id:'p6', nombre:'Boneless Chico s/papas',  precio:100,  costo:27.01,  util:72.99 },
+  { id:'p7', nombre:'Papas solas',             precio:65,   costo:21.65,  util:43.35 },
+  { id:'p8', nombre:'Refresco',                precio:25,   costo:16.00,  util:9.00  },
+  { id:'p9', nombre:'Ranch',                   precio:10,   costo:3.37,   util:6.63  },
+];
+
+// ============================================================
+// ESTADO EN MEMORIA (se recarga desde Sheets al abrir)
+// ============================================================
+let noches = [];
+let abonos = [];
+let SCRIPT_URL = localStorage.getItem('alaverga_url') || '';
+
+// ============================================================
+// SETUP URL
+// ============================================================
+function guardarURL() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    alert('La URL no parece correcta. Debe comenzar con https://script.google.com');
+    return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem('alaverga_url', url);
+  document.getElementById('setup-banner').style.display = 'none';
+  cargarDatos();
+}
+
+// Ocultar banner si ya hay URL
+if (SCRIPT_URL) {
+  document.getElementById('setup-banner').style.display = 'none';
+  document.getElementById('url-input').value = SCRIPT_URL;
+}
+
+// ============================================================
+// SINCRONIZACIÓN CON GOOGLE SHEETS
+// ============================================================
+function setSyncStatus(estado, texto) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-texto');
+  dot.className = 'sync-dot ' + estado;
+  txt.textContent = texto;
+}
+
+async function cargarDatos() {
+  if (!SCRIPT_URL) {
+    setSyncStatus('amarillo', 'Sin conexión — Configura tu URL de Google Sheets');
+    renderHistorial(); renderAbonos(); actualizarTodo();
+    return;
+  }
+  setSyncStatus('amarillo', 'Cargando datos...');
+  try {
+    const res = await fetch(SCRIPT_URL, { method: 'GET' });
+    const data = await res.json();
+    noches = data.ventas || [];
+    abonos = (data.abonos || []).map(a => ({ ...a, monto: parseFloat(a.monto) }));
+    setSyncStatus('verde', 'Conectado con Google Sheets ✓');
+    actualizarTodo();
+    renderHistorial();
+    renderAbonos();
+  } catch(e) {
+    setSyncStatus('rojo', 'Error de conexión — revisa tu URL');
+  }
+}
+
+async function enviarDato(payload) {
+  if (!SCRIPT_URL) return false;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+// ============================================================
+// PREVIEW EN VIVO
+// ============================================================
+document.querySelectorAll('input[type="number"]').forEach(inp => {
+  inp.addEventListener('input', actualizarPreview);
+});
+
+function actualizarPreview() {
+  let tv = 0, tc = 0, tu = 0;
+  productos.forEach(p => {
+    const q = parseInt(document.getElementById(p.id)?.value || 0);
+    tv += q * p.precio;
+    tc += q * p.costo;
+    tu += q * p.util;
+  });
+  document.getElementById('preview-venta').textContent = '$' + tv.toFixed(0);
+  document.getElementById('preview-costo').textContent = '-$' + tc.toFixed(0);
+  document.getElementById('preview-util').textContent  = '$' + tu.toFixed(0);
+}
+
+// ============================================================
+// REGISTRAR VENTA
+// ============================================================
+async function registrarVenta() {
+  const fecha = document.getElementById('venta-fecha').value;
+  if (!fecha) { alert('Selecciona una fecha'); return; }
+
+  let items = [], tv = 0, tc = 0, tu = 0;
+  productos.forEach(p => {
+    const q = parseInt(document.getElementById(p.id)?.value || 0);
+    if (q > 0) {
+      items.push({ nombre:p.nombre, qty:q, venta:q*p.precio, costo:q*p.costo, util:q*p.util });
+      tv += q*p.precio; tc += q*p.costo; tu += q*p.util;
+    }
+  });
+
+  if (items.length === 0) { alert('Agrega al menos un producto'); return; }
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'GUARDANDO...';
+
+  const noche = { fecha, items, totalVenta:tv, totalCosto:tc, totalUtil:tu, ts:Date.now() };
+  noches.push(noche);
+
+  const ok = await enviarDato({ tipo:'venta', fecha, items, ts: noche.ts });
+
+  if (ok) {
+    setSyncStatus('verde', 'Guardado en Google Sheets ✓');
+  } else {
+    setSyncStatus('rojo', 'Sin conexión — dato guardado solo localmente');
+  }
+
+  productos.forEach(p => { const el = document.getElementById(p.id); if(el) el.value = 0; });
+  actualizarPreview();
+  actualizarTodo();
+  renderHistorial();
+
+  btn.disabled = false;
+  btn.textContent = '✓ GUARDAR NOCHE';
+  alert('✅ Noche guardada: $' + tv.toFixed(0) + ' en ventas · Utilidad bruta: $' + tu.toFixed(0));
+}
+
+// ============================================================
+// REGISTRAR ABONO
+// ============================================================
+async function registrarAbono() {
+  const monto = parseFloat(document.getElementById('abono-monto').value);
+  const fecha = document.getElementById('abono-fecha').value;
+  if (!monto || monto <= 0) { alert('Ingresa un monto válido'); return; }
+  if (!fecha) { alert('Selecciona una fecha'); return; }
+
+  const btn = document.getElementById('btn-abono');
+  btn.disabled = true;
+  btn.textContent = 'GUARDANDO...';
+
+  abonos.push({ monto, fecha, ts: Date.now() });
+  await enviarDato({ tipo:'abono', monto, fecha });
+
+  document.getElementById('abono-monto').value = '';
+  actualizarTodo();
+  renderAbonos();
+
+  btn.disabled = false;
+  btn.textContent = '✓ REGISTRAR ABONO';
+  alert('✅ Abono de $' + monto + ' registrado');
+}
+
+// ============================================================
+// RENDER HISTORIAL
+// ============================================================
+function renderHistorial() {
+  const c = document.getElementById('historial-container');
+  if (noches.length === 0) {
+    c.innerHTML = '<div class="empty-state"><div class="icono">🍗</div><div>Aún no hay noches registradas.</div></div>';
+    return;
+  }
+  const sorted = [...noches].sort((a,b) => b.ts - a.ts);
+  c.innerHTML = sorted.map(n => {
+    const chips = n.items.map(it => `<span class="chip">${it.qty}× ${it.nombre.split(' ').slice(0,2).join(' ')}</span>`).join('');
+    return `
+      <div class="historial-item">
+        <div class="historial-header">
+          <span class="historial-fecha">📅 ${formatFecha(n.fecha)}</span>
+          <span class="historial-total">$${parseFloat(n.totalVenta).toFixed(0)}</span>
+        </div>
+        <div class="historial-chips">${chips}</div>
+        <div class="historial-util">Utilidad bruta: $${parseFloat(n.totalUtil).toFixed(0)} · Costo: $${parseFloat(n.totalCosto).toFixed(0)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderAbonos() {
+  const c = document.getElementById('abonos-container');
+  if (abonos.length === 0) {
+    c.innerHTML = '<div class="empty-state"><div class="icono">💳</div><div>Aún no hay abonos registrados.</div></div>';
+    return;
+  }
+  const sorted = [...abonos].sort((a,b) => b.ts - a.ts);
+  c.innerHTML = sorted.map(a => `
+    <div class="historial-item">
+      <div class="historial-header">
+        <span class="historial-fecha">📅 ${formatFecha(a.fecha)}</span>
+        <span style="font-family:'Bebas Neue';font-size:20px;color:var(--verde)">$${parseFloat(a.monto).toFixed(0)}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================
+// ACTUALIZAR NÚMEROS
+// ============================================================
+function actualizarTodo() {
+  const hoy = new Date();
+  const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+  const nochesMes = noches.filter(n => String(n.fecha).startsWith(mesActual));
+
+  const ventasMes    = nochesMes.reduce((s,n) => s + parseFloat(n.totalVenta), 0);
+  const utilBrutaMes = nochesMes.reduce((s,n) => s + parseFloat(n.totalUtil), 0);
+  const utilNetaMes  = utilBrutaMes - GASTOS_FIJOS_MES;
+
+  document.getElementById('res-ventas-mes').textContent   = '$' + ventasMes.toFixed(0);
+  document.getElementById('res-utilidad-mes').textContent = (utilNetaMes >= 0 ? '$' : '-$') + Math.abs(utilNetaMes).toFixed(0);
+  document.getElementById('res-utilidad-mes').className   = 'card-valor ' + (utilNetaMes >= 0 ? 'verde' : 'rojo');
+  document.getElementById('res-noches').textContent       = nochesMes.length;
+
+  const pctMeta = Math.min(100, (ventasMes / META_MES) * 100);
+  document.getElementById('barra-meta').style.width  = pctMeta + '%';
+  document.getElementById('meta-pct').textContent    = pctMeta.toFixed(0) + '% alcanzado';
+  document.getElementById('meta-falta').textContent  = ventasMes >= META_MES ? '✅ Meta alcanzada' : 'Faltan $' + (META_MES - ventasMes).toFixed(0);
+
+  // Semana
+  const lunes   = getLunes(hoy);
+  const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+  const nochesSem = noches.filter(n => { const d = new Date(n.fecha + 'T12:00:00'); return d >= lunes && d <= domingo; });
+
+  const ventasSem    = nochesSem.reduce((s,n) => s + parseFloat(n.totalVenta), 0);
+  const costosSem    = nochesSem.reduce((s,n) => s + parseFloat(n.totalCosto), 0);
+  const utilBrutaSem = nochesSem.reduce((s,n) => s + parseFloat(n.totalUtil), 0);
+  const utilNetaSem  = utilBrutaSem - GASTOS_FIJOS_SEM;
+
+  document.getElementById('sum-ventas').textContent      = '$' + ventasSem.toFixed(0);
+  document.getElementById('sum-costos').textContent      = '-$' + costosSem.toFixed(0);
+  document.getElementById('sum-util-bruta').textContent  = '$' + utilBrutaSem.toFixed(0);
+  document.getElementById('sum-util-neta').textContent   = (utilNetaSem >= 0 ? '$' : '-$') + Math.abs(utilNetaSem).toFixed(0);
+
+  // Deuda
+  const totalPagado = abonos.reduce((s,a) => s + parseFloat(a.monto), 0);
+  const restante    = Math.max(0, DEUDA_INICIAL - totalPagado);
+  const pctDeuda    = Math.min(100, (totalPagado / DEUDA_INICIAL) * 100);
+
+  document.getElementById('res-deuda').textContent        = '$' + restante.toFixed(0);
+  document.getElementById('deuda-pagado').textContent     = '$' + totalPagado.toFixed(0);
+  document.getElementById('deuda-restante').textContent   = 'Restante: $' + restante.toFixed(0);
+  document.getElementById('deuda-pct').textContent        = pctDeuda.toFixed(0) + '% pagado';
+  document.getElementById('barra-deuda').style.width      = pctDeuda + '%';
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getLunes(fecha) {
+  const d = new Date(fecha);
+  const day = d.getDay();
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function formatFecha(str) {
+  if (!str) return '—';
+  const s = String(str).substring(0,10);
+  const [y,m,d] = s.split('-');
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${d} ${meses[parseInt(m)-1]} ${y}`;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('venta-fecha').value = today;
+document.getElementById('abono-fecha').value = today;
+cargarDatos();
+</script>
+</body>
+</html>
