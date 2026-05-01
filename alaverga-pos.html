@@ -381,7 +381,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<a href="https://falh190404-maker.github.io/ALAV-ERGA/alaverga-dashboard-v2.html" class="btn-dash" id="btn-dash" style="display:none">📊 Dashboard</a>
+
 
 <script>
 // ===== DATOS =====
@@ -420,13 +420,13 @@ function guardarURL() {
   localStorage.setItem('alaverga_url', url);
   document.getElementById('setup').style.display = 'none';
   setSyncStatus('verde', 'Conectado ✓');
-  document.getElementById('btn-dash').style.display = 'flex';
+
 }
 
 if (SCRIPT_URL) {
   document.getElementById('setup').style.display = 'none';
   setSyncStatus('verde', 'Conectado ✓');
-  document.getElementById('btn-dash').style.display = 'flex';
+
 } else {
   document.getElementById('setup').style.display = 'block';
   setSyncStatus('rojo', 'Sin conexión');
@@ -551,7 +551,7 @@ function agregarProd(prodId) {
   const p = PRODS.find(x=>x.id===prodId);
   cuentas[cuentaActiva].items.push({
     id:prodId, nombre:p.nombre, precio:p.precio, costo:p.costo, qty:1,
-    sabores:[], condimentos:[], extras:[], nota:''
+    sabores:[], condimentos:[...(p.cond||[])], extras:[], nota:''
   });
   renderProds();
   renderResumen();
@@ -671,8 +671,10 @@ function renderChipsSabores(item) {
 }
 
 function renderChipsCond(item) {
+  const prod = PRODS.find(p=>p.id===item.id);
+  const lista = (prod && prod.cond && prod.cond.length) ? prod.cond : CONDIMENTOS;
   const sel = item.condimentos||[];
-  document.getElementById('cust-cond').innerHTML = CONDIMENTOS.map(c=>
+  document.getElementById('cust-cond').innerHTML = lista.map(c=>
     `<button class="chip ${sel.includes(c)?'on-cond':''}" onclick="toggleCond('${c}')">${c}</button>`
   ).join('');
 }
