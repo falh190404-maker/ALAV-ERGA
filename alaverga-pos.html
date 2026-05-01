@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ÁLAV ERGA — Punto de Venta</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+  :root {
+    --negro:#080808;--amarillo:#F5B800;--amarillo-claro:#FFD84D;
+    --rojo:#E63B2E;--verde:#2ECC71;--azul:#3498DB;
+    --blanco:#F0EBE0;--gris1:#141414;--gris2:#1e1e1e;--gris3:#2a2a2a;--gris4:#888;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--negro);color:var(--blanco);font-family:'DM Sans',sans-serif;min-height:100vh}
+  .header{background:var(--gris1);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--amarillo);position:sticky;top:0;z-index:100}
+  .header-logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px}
+  .header-logo .alav{color:var(--amarillo)}.header-logo .erga{color:var(--rojo)}
+  .header-right{display:flex;align-items:center;gap:8px}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--gris4)}
+  .sync-dot.verde{background:var(--verde);animation:pulse 2s infinite}
+  .sync-dot.rojo{background:var(--rojo)}.sync-dot.amarillo{background:var(--amarillo);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .sync-txt{font-size:10px;color:var(--gris4)}
+  #setup-banner{background:linear-gradient(135deg,rgba(245,184,0,.15),rgba(245,184,0,.05));border:1px solid rgba(245,184,0,.5);border-radius:14px;padding:16px;margin:16px}
+  #setup-banner h3{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--amarillo);letter-spacing:2px;margin-bottom:8px}
+  #setup-banner p{font-size:12px;color:#ccc;margin-bottom:10px}
+  #url-input{background:var(--gris3);border:1px solid var(--amarillo);border-radius:8px;color:var(--blanco);padding:10px 12px;font-size:12px;width:100%;margin-bottom:10px}
+  .view{display:none}.view.active{display:block}
+
+  /* CUENTAS */
+  #view-cuentas{padding:16px;padding-bottom:140px}
+  .cuentas-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .cuentas-titulo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--amarillo);letter-spacing:2px}
+  .btn-nueva{background:var(--amarillo);color:var(--negro);border:none;border-radius:10px;padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
+  .cuentas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .cuenta-card{background:var(--gris2);border-radius:14px;padding:14px;border:1px solid rgba(46,204,113,.4);cursor:pointer;transition:all .2s;position:relative}
+  .cuenta-card:active{transform:scale(.97)}
+  .cuenta-nombre{font-weight:700;font-size:14px;margin-bottom:4px}
+  .cuenta-items-txt{font-size:11px;color:var(--gris4);margin-bottom:8px}
+  .cuenta-total{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--amarillo)}
+  .cuenta-badge{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--verde)}
+  .empty-cuentas{text-align:center;padding:40px 20px;color:var(--gris4);grid-column:1/-1}
+  .empty-cuentas .icono{font-size:40px;margin-bottom:10px}
+
+  /* RESUMEN DÍA */
+  .resumen-dia{background:var(--gris2);border-radius:14px;padding:14px;border:1px solid var(--gris3);margin-bottom:12px}
+  .resumen-dia-titulo{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris4);margin-bottom:8px}
+  .resumen-dia-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+  .resumen-dia-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--amarillo)}
+
+  /* BOTÓN CERRAR DÍA */
+  .btn-cerrar-dia{width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--rojo),#c0392b);color:white;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-bottom:8px}
+  .btn-cerrar-dia:disabled{background:var(--gris3);color:var(--gris4)}
+  .btn-cerrar-dia:active{transform:scale(.98)}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:none;align-items:flex-end}
+  .modal-overlay.active{display:flex}
+  .modal{background:var(--gris1);border-radius:20px 20px 0 0;padding:20px 16px 40px;width:100%;border-top:2px solid var(--amarillo)}
+  .modal-titulo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--amarillo);letter-spacing:2px;margin-bottom:16px;text-align:center}
+  .modal input{background:var(--gris3);border:1px solid #444;border-radius:10px;color:var(--blanco);padding:14px 16px;font-size:16px;font-family:'DM Sans',sans-serif;width:100%;margin-bottom:14px}
+  .modal input:focus{outline:none;border-color:var(--amarillo)}
+  .modal-btns{display:flex;gap:10px}
+  .btn-cancelar{flex:1;padding:14px;border-radius:12px;border:1px solid var(--gris3);background:transparent;color:var(--gris4);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
+  .btn-confirmar{flex:2;padding:14px;border-radius:12px;border:none;background:var(--amarillo);color:var(--negro);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer}
+
+  /* ORDEN */
+  #view-orden{padding-bottom:220px}
+  .orden-header{background:var(--gris1);padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--gris3)}
+  .btn-back{background:var(--gris3);border:none;border-radius:8px;color:var(--blanco);padding:8px 12px;font-size:16px;cursor:pointer}
+  .orden-cliente{flex:1}
+  .orden-cliente-nombre{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--amarillo)}
+  .orden-cliente-items{font-size:11px;color:var(--gris4)}
+  .categorias{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--gris3)}
+  .categorias::-webkit-scrollbar{display:none}
+  .cat-btn{background:var(--gris2);border:1px solid var(--gris3);border-radius:20px;color:var(--gris4);padding:6px 14px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;transition:all .2s}
+  .cat-btn.active{background:var(--amarillo);border-color:var(--amarillo);color:var(--negro)}
+  .productos-lista{padding:12px 16px}
+  .prod-btn{background:var(--gris2);border:1px solid var(--gris3);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .15s;width:100%}
+  .prod-btn:active{transform:scale(.98);background:var(--gris3)}
+  .prod-info{text-align:left}
+  .prod-nom{font-weight:600;font-size:14px}
+  .prod-prec{font-size:12px;color:var(--gris4);margin-top:2px}
+  .prod-add{background:var(--amarillo);color:var(--negro);border:none;border-radius:8px;width:36px;height:36px;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* RESUMEN FLOTANTE */
+  .resumen-flotante{position:fixed;bottom:0;left:0;right:0;background:var(--gris1);border-top:2px solid var(--gris3);padding:12px 16px 30px;z-index:150}
+  .resumen-items{max-height:100px;overflow-y:auto;margin-bottom:10px;scrollbar-width:none}
+  .resumen-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--gris3);font-size:12px}
+  .resumen-item-nombre{flex:1}
+  .resumen-item-controles{display:flex;align-items:center;gap:6px}
+  .ctrl-btn{background:var(--gris3);border:none;border-radius:6px;color:var(--blanco);width:26px;height:26px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .ctrl-qty{font-family:'Bebas Neue',sans-serif;font-size:16px;min-width:20px;text-align:center;color:var(--amarillo)}
+  .ctrl-precio{font-size:11px;color:var(--gris4);min-width:46px;text-align:right}
+  .resumen-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .resumen-total-lbl{font-size:13px;color:var(--gris4)}
+  .resumen-total-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amarillo);letter-spacing:1px}
+  .btn-cobrar{width:100%;padding:14px;border-radius:14px;border:none;background:var(--verde);color:white;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:all .2s}
+  .btn-cobrar:active{transform:scale(.98)}
+  .btn-cobrar:disabled{background:var(--gris3);color:var(--gris4)}
+
+  /* COBRO */
+  .cobro-modal{background:var(--gris1);border-radius:20px 20px 0 0;padding:24px 16px 40px;width:100%;border-top:2px solid var(--verde)}
+  .cobro-cliente{text-align:center;margin-bottom:16px}
+  .cobro-nombre{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amarillo);letter-spacing:3px}
+  .cobro-items{background:var(--gris2);border-radius:12px;padding:12px;margin-bottom:14px;max-height:180px;overflow-y:auto}
+  .cobro-item{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--gris3)}
+  .cobro-item:last-child{border-bottom:none}
+  .cobro-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding:12px;background:rgba(245,184,0,.1);border-radius:12px;border:1px solid rgba(245,184,0,.3)}
+  .cobro-total-lbl{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--amarillo)}
+  .cobro-total-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--amarillo);letter-spacing:2px}
+  .cobro-btns{display:flex;gap:10px}
+  .btn-cobrar-confirmar{flex:2;padding:14px;border-radius:14px;border:none;background:var(--verde);color:white;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer}
+
+  /* CIERRE DÍA MODAL */
+  .cierre-modal{background:var(--gris1);border-radius:20px 20px 0 0;padding:24px 16px 40px;width:100%;border-top:2px solid var(--rojo)}
+  .cierre-titulo{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--rojo);letter-spacing:2px;text-align:center;margin-bottom:4px}
+  .cierre-sub{text-align:center;font-size:12px;color:var(--gris4);margin-bottom:20px}
+  .cierre-resumen{background:var(--gris2);border-radius:12px;padding:14px;margin-bottom:16px}
+  .cierre-fila{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gris3);font-size:13px}
+  .cierre-fila:last-child{border-bottom:none}
+  .cierre-fila .lbl{color:var(--gris4)}
+  .cierre-fila .val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--amarillo)}
+  .cierre-total-box{background:rgba(230,59,46,.1);border:1px solid rgba(230,59,46,.3);border-radius:12px;padding:14px;text-align:center;margin-bottom:20px}
+  .cierre-total-lbl{font-size:12px;color:var(--gris4);margin-bottom:4px}
+  .cierre-total-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--amarillo);letter-spacing:2px}
+  .cierre-cuentas-lista{background:var(--gris2);border-radius:10px;padding:10px;margin-bottom:16px;max-height:120px;overflow-y:auto}
+  .cierre-cuenta-item{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--gris3)}
+  .cierre-cuenta-item:last-child{border-bottom:none}
+  .cierre-btns{display:flex;gap:10px}
+  .btn-cerrar-confirmar{flex:2;padding:14px;border-radius:14px;border:none;background:var(--rojo);color:white;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer}
+
+  /* TOAST */
+  .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:var(--verde);color:white;padding:12px 24px;border-radius:30px;font-weight:600;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}.toast.error{background:var(--rojo)}
+
+  .btn-dashboard{position:fixed;bottom:20px;right:16px;background:var(--gris2);border:1px solid var(--gris3);border-radius:50px;padding:10px 16px;font-size:12px;color:var(--gris4);cursor:pointer;z-index:50;display:flex;align-items:center;gap:6px;text-decoration:none}
+  .resumen-vacio{text-align:center;padding:8px;color:var(--gris4);font-size:12px}
+  .tag-llevar{display:inline-block;background:rgba(52,152,219,.2);color:#5dade2;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px}
+  .cuentas-cobradas{margin-top:12px}
+  .cuentas-cobradas-titulo{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris4);margin-bottom:8px}
+  .cuenta-cobrada-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);border-radius:20px;padding:4px 10px;font-size:12px;margin:3px;color:#4cd97a}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo"><span class="alav">ÁLAV</span> <span class="erga">ERGA</span> <span style="font-size:13px;color:var(--gris4);letter-spacing:1px"> POS</span></div>
+  <div class="header-right">
+    <div class="sync-dot amarillo" id="sync-dot"></div>
+    <span class="sync-txt" id="sync-txt">...</span>
+  </div>
+</div>
+
+<div id="setup-banner" style="display:none">
+  <h3>⚙️ Conectar Google Sheets</h3>
+  <p>Pega la misma URL del dashboard.</p>
+  <input type="text" id="url-input" placeholder="https://script.google.com/macros/s/.../exec">
+  <button class="btn-confirmar" onclick="guardarURL()" style="width:100%;padding:12px;font-size:14px">✓ CONECTAR</button>
+</div>
+
+<!-- VISTA CUENTAS -->
+<div id="view-cuentas" class="view active">
+  <div class="cuentas-header">
+    <div class="cuentas-titulo">🍗 Cuentas abiertas</div>
+    <button class="btn-nueva" onclick="abrirModalNueva()">+ Nueva</button>
+  </div>
+
+  <!-- Resumen del día -->
+  <div class="resumen-dia" id="resumen-dia" style="display:none">
+    <div class="resumen-dia-titulo">📊 Acumulado hoy</div>
+    <div class="resumen-dia-row">
+      <span>Cuentas cobradas:</span>
+      <span class="resumen-dia-val" id="dia-cuentas">0</span>
+    </div>
+    <div class="resumen-dia-row">
+      <span>Total cobrado:</span>
+      <span class="resumen-dia-val" id="dia-total">$0</span>
+    </div>
+  </div>
+
+  <div class="cuentas-grid" id="cuentas-grid">
+    <div class="empty-cuentas">
+      <div class="icono">🍗</div>
+      <div>No hay cuentas abiertas.<br>Toca <strong>"+ Nueva"</strong> para empezar.</div>
+    </div>
+  </div>
+
+  <!-- Cuentas cobradas hoy -->
+  <div class="cuentas-cobradas" id="cuentas-cobradas-wrap" style="display:none">
+    <div class="cuentas-cobradas-titulo">✅ Cobradas esta noche</div>
+    <div id="cuentas-cobradas-chips"></div>
+  </div>
+
+  <!-- Botón cerrar día -->
+  <div style="margin-top:16px">
+    <button class="btn-cerrar-dia" id="btn-cerrar-dia" onclick="abrirCierreDia()" disabled>
+      🔒 CERRAR DÍA Y REGISTRAR EN DASHBOARD
+    </button>
+    <div style="font-size:11px;color:var(--gris4);text-align:center">Toca al terminar tu noche para registrar todo en el dashboard</div>
+  </div>
+</div>
+
+<!-- VISTA ORDEN -->
+<div id="view-orden" class="view">
+  <div class="orden-header">
+    <button class="btn-back" onclick="volverACuentas()">←</button>
+    <div class="orden-cliente">
+      <div class="orden-cliente-nombre" id="orden-nombre">Cliente</div>
+      <div class="orden-cliente-items" id="orden-items-count">0 productos</div>
+    </div>
+    <button onclick="eliminarCuentaActiva()" style="background:rgba(230,59,46,.15);border:1px solid rgba(230,59,46,.3);color:var(--rojo);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">🗑</button>
+  </div>
+  <div class="categorias" id="categorias"></div>
+  <div class="productos-lista" id="productos-lista"></div>
+  <div class="resumen-flotante">
+    <div class="resumen-items" id="resumen-items">
+      <div class="resumen-vacio">Agrega productos para empezar</div>
+    </div>
+    <div class="resumen-total-row">
+      <span class="resumen-total-lbl">Total:</span>
+      <span class="resumen-total-val" id="resumen-total">$0</span>
+    </div>
+    <button class="btn-cobrar" id="btn-cobrar" onclick="abrirCobro()" disabled>💰 COBRAR</button>
+  </div>
+</div>
+
+<!-- MODAL NUEVA CUENTA -->
+<div class="modal-overlay" id="modal-nueva">
+  <div class="modal">
+    <div class="modal-titulo">¿Cómo se llama el cliente?</div>
+    <input type="text" id="input-nombre" placeholder="Ej: Axel, Para llevar, Juan..." maxlength="20">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <button onclick="setNombre('Para llevar')" style="background:rgba(52,152,219,.2);border:1px solid rgba(52,152,219,.4);color:#5dade2;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer">🥡 Para llevar</button>
+      <button onclick="setNombre('Mesa 1')" style="background:var(--gris3);border:1px solid #444;color:var(--blanco);border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer">🪑 Mesa 1</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal('modal-nueva')">Cancelar</button>
+      <button class="btn-confirmar" onclick="crearCuenta()">✓ ABRIR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COBRO -->
+<div class="modal-overlay" id="modal-cobro">
+  <div class="cobro-modal">
+    <div class="cobro-cliente">
+      <div class="cobro-nombre" id="cobro-nombre">Cliente</div>
+      <div style="font-size:12px;color:var(--gris4)">Confirmar cobro</div>
+    </div>
+    <div class="cobro-items" id="cobro-items"></div>
+    <div class="cobro-total">
+      <span class="cobro-total-lbl">TOTAL</span>
+      <span class="cobro-total-val" id="cobro-total">$0</span>
+    </div>
+    <div class="cobro-btns">
+      <button class="btn-cancelar" onclick="cerrarModal('modal-cobro')">Cancelar</button>
+      <button class="btn-cobrar-confirmar" onclick="confirmarCobro()">✅ COBRADO</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CIERRE DE DÍA -->
+<div class="modal-overlay" id="modal-cierre">
+  <div class="cierre-modal">
+    <div class="cierre-titulo">🔒 CIERRE DEL DÍA</div>
+    <div class="cierre-sub">Esto registrará toda la noche en el dashboard</div>
+    <div class="cierre-total-box">
+      <div class="cierre-total-lbl">TOTAL DE LA NOCHE</div>
+      <div class="cierre-total-num" id="cierre-total-num">$0</div>
+    </div>
+    <div class="cierre-resumen" id="cierre-resumen"></div>
+    <div class="cierre-cuentas-lista" id="cierre-cuentas-lista"></div>
+    <div class="cierre-btns">
+      <button class="btn-cancelar" onclick="cerrarModal('modal-cierre')">Cancelar</button>
+      <button class="btn-cerrar-confirmar" onclick="confirmarCierreDia()">🔒 CONFIRMAR CIERRE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<a href="https://falh190404-maker.github.io/ALAV-ERGA/alaverga-dashboard-v2.html" class="btn-dashboard" id="btn-dash" style="display:none">📊 Dashboard</a>
+
+<script>
+const PRODUCTOS = [
+  {id:'p1', nombre:'Alitas Grande c/papas',   precio:150, costo:81.22, cat:'Alitas'},
+  {id:'p2', nombre:'Alitas Chica c/papas',    precio:110, costo:40.47, cat:'Alitas'},
+  {id:'p3', nombre:'Alitas Chica s/papas',    precio:90,  costo:36.21, cat:'Alitas'},
+  {id:'p4', nombre:'Boneless Grande c/papas', precio:160, costo:75.80, cat:'Boneless'},
+  {id:'p5', nombre:'Boneless Chico c/papas',  precio:120, costo:38.46, cat:'Boneless'},
+  {id:'p6', nombre:'Boneless Chico s/papas',  precio:100, costo:27.01, cat:'Boneless'},
+  {id:'p7', nombre:'Papas solas',             precio:65,  costo:22.71, cat:'Papas'},
+  {id:'p8', nombre:'Refresco',                precio:25,  costo:16.00, cat:'Bebidas'},
+  {id:'p9', nombre:'Ranch (vaso)',            precio:10,  costo:3.37,  cat:'Extras'},
+  {id:'p10',nombre:'Paleta de hielo',         precio:25,  costo:10.00, cat:'Bebidas'},
+];
+const CATS = ['Todos','Alitas','Boneless','Papas','Bebidas','Extras'];
+
+let cuentas = {};
+let cuentaActiva = null;
+let catActiva = 'Todos';
+let cuentasCobradas = []; // acumulado del día
+let SCRIPT_URL = localStorage.getItem('alaverga_url') || '';
+
+// SETUP
+function guardarURL() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) { showToast('URL incorrecta', true); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem('alaverga_url', url);
+  document.getElementById('setup-banner').style.display = 'none';
+  setSyncStatus('verde', 'Conectado ✓');
+  document.getElementById('btn-dash').style.display = 'flex';
+}
+
+if (SCRIPT_URL) {
+  document.getElementById('setup-banner').style.display = 'none';
+  setSyncStatus('verde', 'Conectado ✓');
+  document.getElementById('btn-dash').style.display = 'flex';
+} else {
+  document.getElementById('setup-banner').style.display = 'block';
+  setSyncStatus('rojo', 'Sin conexión');
+}
+
+function setSyncStatus(e, t) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + e;
+  document.getElementById('sync-txt').textContent = t;
+}
+
+// CUENTAS
+function renderCuentas() {
+  const grid = document.getElementById('cuentas-grid');
+  const ids = Object.keys(cuentas);
+
+  if (!ids.length) {
+    grid.innerHTML = '<div class="empty-cuentas"><div class="icono">🍗</div><div>No hay cuentas abiertas.<br>Toca <strong>"+ Nueva"</strong> para empezar.</div></div>';
+  } else {
+    grid.innerHTML = ids.map(id => {
+      const c = cuentas[id];
+      const total = calcTotal(c.items);
+      const num = Object.values(c.items).reduce((s,q)=>s+q,0);
+      const esLlevar = c.nombre.toLowerCase().includes('llevar');
+      return `<div class="cuenta-card" onclick="abrirCuenta('${id}')">
+        <div class="cuenta-badge"></div>
+        <div class="cuenta-nombre">${c.nombre}${esLlevar?'<span class="tag-llevar">🥡</span>':''}</div>
+        <div class="cuenta-items-txt">${num} producto${num!==1?'s':''}</div>
+        <div class="cuenta-total">$${total}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Resumen del día
+  const totalDia = cuentasCobradas.reduce((s,c)=>s+c.total, 0);
+  const rdDiv = document.getElementById('resumen-dia');
+  if (cuentasCobradas.length > 0) {
+    rdDiv.style.display = 'block';
+    document.getElementById('dia-cuentas').textContent = cuentasCobradas.length;
+    document.getElementById('dia-total').textContent = '$' + totalDia;
+  } else {
+    rdDiv.style.display = 'none';
+  }
+
+  // Chips cuentas cobradas
+  const cobWrap = document.getElementById('cuentas-cobradas-wrap');
+  const cobChips = document.getElementById('cuentas-cobradas-chips');
+  if (cuentasCobradas.length > 0) {
+    cobWrap.style.display = 'block';
+    cobChips.innerHTML = cuentasCobradas.map(c =>
+      `<span class="cuenta-cobrada-chip">✓ ${c.nombre} $${c.total}</span>`
+    ).join('');
+  } else {
+    cobWrap.style.display = 'none';
+  }
+
+  // Botón cerrar día
+  document.getElementById('btn-cerrar-dia').disabled = cuentasCobradas.length === 0;
+}
+
+function abrirModalNueva() {
+  document.getElementById('input-nombre').value = '';
+  document.getElementById('modal-nueva').classList.add('active');
+  setTimeout(() => document.getElementById('input-nombre').focus(), 300);
+}
+
+function setNombre(n) { document.getElementById('input-nombre').value = n; }
+function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function crearCuenta() {
+  const nombre = document.getElementById('input-nombre').value.trim();
+  if (!nombre) { showToast('Escribe un nombre', true); return; }
+  const id = 'c_' + Date.now();
+  cuentas[id] = {nombre, items:{}, ts:Date.now()};
+  cerrarModal('modal-nueva');
+  renderCuentas();
+  abrirCuenta(id);
+}
+
+function abrirCuenta(id) {
+  cuentaActiva = id;
+  document.getElementById('orden-nombre').textContent = cuentas[id].nombre;
+  document.getElementById('view-cuentas').classList.remove('active');
+  document.getElementById('view-orden').classList.add('active');
+  catActiva = 'Todos';
+  renderCategorias();
+  renderProductos();
+  renderResumen();
+}
+
+function volverACuentas() {
+  cuentaActiva = null;
+  document.getElementById('view-orden').classList.remove('active');
+  document.getElementById('view-cuentas').classList.add('active');
+  renderCuentas();
+}
+
+function eliminarCuentaActiva() {
+  if (!confirm('¿Eliminar cuenta de ' + cuentas[cuentaActiva].nombre + '?')) return;
+  delete cuentas[cuentaActiva];
+  volverACuentas();
+}
+
+// CATEGORÍAS Y PRODUCTOS
+function renderCategorias() {
+  document.getElementById('categorias').innerHTML = CATS.map(c =>
+    `<button class="cat-btn ${c===catActiva?'active':''}" onclick="selCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function selCat(cat) { catActiva = cat; renderCategorias(); renderProductos(); }
+
+function renderProductos() {
+  const prods = catActiva==='Todos' ? PRODUCTOS : PRODUCTOS.filter(p=>p.cat===catActiva);
+  const c = cuentas[cuentaActiva];
+  document.getElementById('productos-lista').innerHTML = prods.map(p => {
+    const qty = c.items[p.id]||0;
+    return `<button class="prod-btn" onclick="agregarProducto('${p.id}')">
+      <div class="prod-info">
+        <div class="prod-nom">${p.nombre}${qty>0?` <span style="color:var(--amarillo)">×${qty}</span>`:''}</div>
+        <div class="prod-prec">$${p.precio}</div>
+      </div>
+      <div class="prod-add">+</div>
+    </button>`;
+  }).join('');
+}
+
+function agregarProducto(id) {
+  cuentas[cuentaActiva].items[id] = (cuentas[cuentaActiva].items[id]||0)+1;
+  renderProductos();
+  renderResumen();
+}
+
+// RESUMEN
+function calcTotal(items) {
+  return Object.entries(items).reduce((s,[id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===id);
+    return s+(p?p.precio*qty:0);
+  },0);
+}
+
+function renderResumen() {
+  const c = cuentas[cuentaActiva];
+  const itemsArr = Object.entries(c.items).filter(([,q])=>q>0);
+  const total = calcTotal(c.items);
+  const num = itemsArr.reduce((s,[,q])=>s+q,0);
+  document.getElementById('orden-items-count').textContent = `${num} producto${num!==1?'s':''}`;
+  document.getElementById('resumen-total').textContent = '$'+total;
+  document.getElementById('btn-cobrar').disabled = !itemsArr.length;
+  if (!itemsArr.length) {
+    document.getElementById('resumen-items').innerHTML = '<div class="resumen-vacio">Agrega productos para empezar</div>';
+    return;
+  }
+  document.getElementById('resumen-items').innerHTML = itemsArr.map(([id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===id);
+    if(!p) return '';
+    return `<div class="resumen-item">
+      <span class="resumen-item-nombre">${p.nombre.split(' ').slice(0,2).join(' ')}</span>
+      <div class="resumen-item-controles">
+        <button class="ctrl-btn" onclick="cambiarQty('${id}',-1)">−</button>
+        <span class="ctrl-qty">${qty}</span>
+        <button class="ctrl-btn" onclick="cambiarQty('${id}',1)">+</button>
+        <span class="ctrl-precio">$${p.precio*qty}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function cambiarQty(id, delta) {
+  const nueva = (cuentas[cuentaActiva].items[id]||0)+delta;
+  if (nueva<=0) delete cuentas[cuentaActiva].items[id];
+  else cuentas[cuentaActiva].items[id]=nueva;
+  renderProductos();
+  renderResumen();
+}
+
+// COBRO (local - no va al dashboard todavía)
+function abrirCobro() {
+  const c = cuentas[cuentaActiva];
+  const total = calcTotal(c.items);
+  const itemsArr = Object.entries(c.items).filter(([,q])=>q>0);
+  document.getElementById('cobro-nombre').textContent = c.nombre;
+  document.getElementById('cobro-total').textContent = '$'+total;
+  document.getElementById('cobro-items').innerHTML = itemsArr.map(([id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===id);
+    return `<div class="cobro-item"><span>${p.nombre} ×${qty}</span><span>$${p.precio*qty}</span></div>`;
+  }).join('');
+  document.getElementById('modal-cobro').classList.add('active');
+}
+
+function confirmarCobro() {
+  const c = cuentas[cuentaActiva];
+  const total = calcTotal(c.items);
+  const itemsArr = Object.entries(c.items).filter(([,q])=>q>0);
+
+  // Acumular en el día (NO enviar al dashboard todavía)
+  const items = itemsArr.map(([id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===id);
+    return {nombre:p.nombre, qty, venta:p.precio*qty, costo:p.costo*qty, util:(p.precio-p.costo)*qty};
+  });
+
+  cuentasCobradas.push({ nombre: c.nombre, total, items });
+
+  cerrarModal('modal-cobro');
+  const nombre = c.nombre;
+  delete cuentas[cuentaActiva];
+  showToast(`✅ $${total} cobrado — ${nombre}`);
+  volverACuentas();
+}
+
+// CIERRE DEL DÍA (aquí sí va al dashboard)
+function abrirCierreDia() {
+  const totalDia = cuentasCobradas.reduce((s,c)=>s+c.total,0);
+
+  // Agrupar todos los productos del día
+  const productosAgrupados = {};
+  cuentasCobradas.forEach(c => {
+    c.items.forEach(item => {
+      if (!productosAgrupados[item.nombre]) {
+        productosAgrupados[item.nombre] = {nombre:item.nombre, qty:0, venta:0, costo:0, util:0};
+      }
+      productosAgrupados[item.nombre].qty += item.qty;
+      productosAgrupados[item.nombre].venta += item.venta;
+      productosAgrupados[item.nombre].costo += item.costo;
+      productosAgrupados[item.nombre].util += item.util;
+    });
+  });
+
+  document.getElementById('cierre-total-num').textContent = '$'+totalDia;
+
+  // Resumen productos
+  document.getElementById('cierre-resumen').innerHTML =
+    Object.values(productosAgrupados).map(p =>
+      `<div class="cierre-fila"><span class="lbl">${p.nombre.split(' ').slice(0,2).join(' ')} ×${p.qty}</span><span class="val">$${p.venta}</span></div>`
+    ).join('');
+
+  // Lista cuentas cobradas
+  document.getElementById('cierre-cuentas-lista').innerHTML =
+    cuentasCobradas.map(c =>
+      `<div class="cierre-cuenta-item"><span>${c.nombre}</span><span style="color:var(--amarillo)">$${c.total}</span></div>`
+    ).join('');
+
+  document.getElementById('modal-cierre').classList.add('active');
+}
+
+async function confirmarCierreDia() {
+  const totalDia = cuentasCobradas.reduce((s,c)=>s+c.total,0);
+  const fecha = new Date().toISOString().split('T')[0];
+  const nocheID = fecha+'_'+Date.now();
+
+  // Agrupar todos los productos
+  const productosAgrupados = {};
+  cuentasCobradas.forEach(c => {
+    c.items.forEach(item => {
+      if (!productosAgrupados[item.nombre]) {
+        productosAgrupados[item.nombre] = {nombre:item.nombre, qty:0, venta:0, costo:0, util:0};
+      }
+      productosAgrupados[item.nombre].qty += item.qty;
+      productosAgrupados[item.nombre].venta += item.venta;
+      productosAgrupados[item.nombre].costo += item.costo;
+      productosAgrupados[item.nombre].util += item.util;
+    });
+  });
+
+  const items = Object.values(productosAgrupados);
+
+  cerrarModal('modal-cierre');
+  setSyncStatus('amarillo', 'Guardando...');
+
+  try {
+    if (SCRIPT_URL) {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({tipo:'venta', fecha, items, nocheID, ts:Date.now()})
+      });
+      setSyncStatus('verde', 'Guardado en dashboard ✓');
+      showToast(`🎉 Noche cerrada — Total: $${totalDia}`);
+    } else {
+      showToast('Sin conexión — configura la URL', true);
+    }
+  } catch(e) {
+    setSyncStatus('rojo', 'Error al guardar');
+    showToast('Error al guardar', true);
+  }
+
+  // Limpiar el día
+  cuentasCobradas = [];
+  renderCuentas();
+}
+
+function showToast(msg, error=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show'+(error?' error':'');
+  setTimeout(()=>t.className='toast', 3000);
+}
+
+document.getElementById('input-nombre').addEventListener('keydown', e => {
+  if(e.key==='Enter') crearCuenta();
+});
+
+// Init
+renderCuentas();
+</script>
+</body>
+</html>
