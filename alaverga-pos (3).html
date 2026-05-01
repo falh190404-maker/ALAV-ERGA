@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ÁLAV ERGA — POS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+  :root{--negro:#080808;--amarillo:#F5B800;--rojo:#E63B2E;--verde:#2ECC71;--azul:#3498DB;--morado:#9B59B6;--blanco:#F0EBE0;--gris1:#141414;--gris2:#1e1e1e;--gris3:#2a2a2a;--gris4:#888;}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--negro);color:var(--blanco);font-family:'DM Sans',sans-serif;min-height:100vh}
+
+  /* HEADER */
+  .header{background:var(--gris1);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--amarillo);position:sticky;top:0;z-index:100}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px}
+  .logo .alav{color:var(--amarillo)}.logo .erga{color:var(--rojo)}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--gris4);flex-shrink:0}
+  .sync-dot.verde{background:var(--verde);animation:pulse 2s infinite}
+  .sync-dot.rojo{background:var(--rojo)}.sync-dot.amarillo{background:var(--amarillo);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .sync-txt{font-size:10px;color:var(--gris4)}
+  .header-right{display:flex;align-items:center;gap:8px}
+
+  /* SETUP */
+  .setup{background:linear-gradient(135deg,rgba(245,184,0,.15),rgba(245,184,0,.05));border:1px solid rgba(245,184,0,.5);border-radius:14px;padding:16px;margin:16px}
+  .setup h3{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--amarillo);letter-spacing:2px;margin-bottom:8px}
+  .setup p{font-size:12px;color:#ccc;margin-bottom:10px}
+
+  /* VIEWS */
+  .view{display:none}.view.active{display:block}
+
+  /* CUENTAS */
+  #v-cuentas{padding:16px;padding-bottom:120px}
+  .row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .sec-titulo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--amarillo);letter-spacing:2px}
+  .btn-nueva{background:var(--amarillo);color:var(--negro);border:none;border-radius:10px;padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .cuenta-card{background:var(--gris2);border-radius:14px;padding:14px;border:1px solid rgba(46,204,113,.4);cursor:pointer;position:relative}
+  .cuenta-card:active{transform:scale(.97)}
+  .c-nombre{font-weight:700;font-size:14px;margin-bottom:4px}
+  .c-items{font-size:11px;color:var(--gris4);margin-bottom:8px}
+  .c-total{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--amarillo)}
+  .c-badge{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--verde)}
+  .empty{text-align:center;padding:36px 16px;color:var(--gris4);grid-column:1/-1}
+  .empty .ico{font-size:36px;margin-bottom:10px}
+
+  /* RESUMEN DÍA */
+  .dia-box{background:var(--gris2);border-radius:12px;padding:12px;border:1px solid var(--gris3);margin-bottom:12px}
+  .dia-titulo{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris4);margin-bottom:8px}
+  .dia-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+  .dia-val{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amarillo)}
+  .cobradas-titulo{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris4);margin:10px 0 6px}
+  .chip-cobrada{display:inline-flex;align-items:center;gap:4px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);border-radius:20px;padding:3px 10px;font-size:11px;margin:2px;color:#4cd97a}
+  .btn-cerrar{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--rojo),#c0392b);color:white;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;margin-bottom:6px;margin-top:14px}
+  .btn-cerrar:disabled{background:var(--gris3);color:var(--gris4)}
+  .cerrar-hint{font-size:10px;color:var(--gris4);text-align:center}
+
+  /* MODALS */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.87);z-index:200;display:none;align-items:flex-end}
+  .overlay.active{display:flex}
+  .sheet{border-radius:20px 20px 0 0;padding:20px 16px 40px;width:100%;max-height:92vh;overflow-y:auto}
+  .sheet.amarillo{background:var(--gris1);border-top:2px solid var(--amarillo)}
+  .sheet.verde{background:var(--gris1);border-top:2px solid var(--verde)}
+  .sheet.rojo{background:var(--gris1);border-top:2px solid var(--rojo)}
+  .sheet.azul{background:var(--gris1);border-top:2px solid var(--azul)}
+  .sheet.morado{background:var(--gris1);border-top:2px solid var(--morado)}
+  .m-titulo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:14px;text-align:center}
+  .m-titulo.amarillo{color:var(--amarillo)}.m-titulo.verde{color:var(--verde)}.m-titulo.rojo{color:var(--rojo)}.m-titulo.azul{color:var(--azul)}.m-titulo.morado{color:var(--morado)}
+  .m-sub{font-size:12px;color:var(--gris4);text-align:center;margin-top:-10px;margin-bottom:14px}
+  .m-btns{display:flex;gap:10px;margin-top:14px}
+  .btn-cancel{flex:1;padding:13px;border-radius:12px;border:1px solid var(--gris3);background:transparent;color:var(--gris4);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer}
+  .btn-ok{flex:2;padding:13px;border-radius:12px;border:none;background:var(--amarillo);color:var(--negro);font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;cursor:pointer}
+  .btn-ok.verde{background:var(--verde);color:white}
+  .btn-ok.rojo{background:var(--rojo);color:white}
+  .inp{background:var(--gris3);border:1px solid #444;border-radius:10px;color:var(--blanco);padding:13px 15px;font-size:15px;font-family:'DM Sans',sans-serif;width:100%;margin-bottom:12px}
+  .inp:focus{outline:none;border-color:var(--amarillo)}
+  .quick-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .quick-btn{padding:10px;border-radius:10px;border:1px solid #444;background:var(--gris3);color:var(--blanco);font-size:13px;font-weight:600;cursor:pointer}
+
+  /* ORDEN */
+  #v-orden{padding-bottom:250px}
+  .o-header{background:var(--gris1);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--gris3);position:sticky;top:64px;z-index:90}
+  .btn-back{background:var(--gris3);border:none;border-radius:8px;color:var(--blanco);padding:7px 12px;font-size:16px;cursor:pointer}
+  .o-info{flex:1}
+  .o-nombre{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--amarillo)}
+  .o-count{font-size:10px;color:var(--gris4)}
+  .btn-del{background:rgba(230,59,46,.15);border:1px solid rgba(230,59,46,.3);color:var(--rojo);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+  .btn-desc-orden{background:rgba(155,89,182,.15);border:1px solid rgba(155,89,182,.3);color:#c39bd3;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+
+  .cats{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--gris3)}
+  .cats::-webkit-scrollbar{display:none}
+  .cat-btn{background:var(--gris2);border:1px solid var(--gris3);border-radius:20px;color:var(--gris4);padding:5px 13px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .cat-btn.active{background:var(--amarillo);border-color:var(--amarillo);color:var(--negro)}
+
+  .prods-list{padding:10px 16px}
+  .prod-row{background:var(--gris2);border:1px solid var(--gris3);border-radius:12px;padding:13px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;width:100%}
+  .prod-row:active{background:var(--gris3)}
+  .p-info{text-align:left}
+  .p-nom{font-weight:600;font-size:14px}
+  .p-prec{font-size:11px;color:var(--gris4);margin-top:2px}
+  .p-add{background:var(--amarillo);color:var(--negro);border:none;border-radius:8px;width:34px;height:34px;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* RESUMEN FLOTANTE */
+  .flotante{position:fixed;bottom:0;left:0;right:0;background:var(--gris1);border-top:2px solid var(--gris3);padding:10px 16px 26px;z-index:150}
+  .res-items{max-height:140px;overflow-y:auto;margin-bottom:8px;scrollbar-width:none}
+  .res-item{padding:6px 0;border-bottom:1px solid var(--gris3)}
+  .res-item-row{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+  .res-nom{flex:1;font-weight:600}
+  .res-ctrls{display:flex;align-items:center;gap:5px}
+  .c-btn{background:var(--gris3);border:none;border-radius:6px;color:var(--blanco);width:26px;height:26px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .c-qty{font-family:'Bebas Neue',sans-serif;font-size:16px;min-width:18px;text-align:center;color:var(--amarillo)}
+  .c-precio{font-size:11px;color:var(--gris4);min-width:44px;text-align:right}
+  .btn-pers{background:rgba(52,152,219,.12);border:1px solid rgba(52,152,219,.3);color:#5dade2;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;margin-top:3px}
+  .nota-tag{font-size:10px;color:#5dade2;margin-top:3px;font-style:italic;line-height:1.3}
+  .res-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .res-total-lbl{font-size:12px;color:var(--gris4)}
+  .res-total-val{font-family:'Bebas Neue',sans-serif;font-size:25px;color:var(--amarillo)}
+  .descuento-tag{font-size:11px;color:#c39bd3;margin-left:8px}
+  .btn-cobrar{width:100%;padding:13px;border-radius:14px;border:none;background:var(--verde);color:white;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer}
+  .btn-cobrar:disabled{background:var(--gris3);color:var(--gris4)}
+  .vacio{text-align:center;padding:8px;color:var(--gris4);font-size:12px}
+
+  /* COBRO */
+  .cobro-nombre{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--amarillo);letter-spacing:3px;text-align:center;margin-bottom:4px}
+  .cobro-items-list{background:var(--gris2);border-radius:12px;padding:12px;margin-bottom:12px;max-height:180px;overflow-y:auto}
+  .cobro-item-row{display:flex;justify-content:space-between;font-size:12px}
+  .cobro-item-nota{font-size:10px;color:#5dade2;font-style:italic;margin-top:2px}
+  .cobro-sep{height:1px;background:var(--gris3);margin:6px 0}
+  .cobro-total-box{padding:12px;background:rgba(245,184,0,.08);border-radius:12px;border:1px solid rgba(245,184,0,.25);margin-bottom:14px}
+  .cobro-total-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+  .cobro-total-row.grande .val{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--amarillo)}
+  .cobro-total-row .lbl{color:var(--gris4)}
+  .cobro-total-row .val{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amarillo)}
+  .cobro-total-row.desc .val{color:#c39bd3}
+
+  /* FORMA DE PAGO */
+  .pago-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .pago-btn{padding:18px 10px;border-radius:14px;border:2px solid var(--gris3);background:var(--gris2);cursor:pointer;text-align:center;transition:all .2s}
+  .pago-btn.activo.efectivo{border-color:var(--verde);background:rgba(46,204,113,.1)}
+  .pago-btn.activo.tarjeta{border-color:var(--azul);background:rgba(52,152,219,.1)}
+  .pago-icono{font-size:28px;margin-bottom:6px}
+  .pago-lbl{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px}
+  .pago-lbl.efectivo{color:var(--verde)}.pago-lbl.tarjeta{color:var(--azul)}
+
+  /* PERSONALIZAR */
+  .cust-prod{font-size:13px;color:var(--gris4);margin-bottom:14px;text-align:center}
+  .cust-sec{margin-bottom:14px}
+  .cust-sec-titulo{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gris4);margin-bottom:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--gris3);border:1px solid #444;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+  .chip.on-sabor{background:var(--amarillo);border-color:var(--amarillo);color:var(--negro)}
+  .chip.on-extra{background:var(--verde);border-color:var(--verde);color:var(--negro)}
+  .chip.on-cond{background:rgba(52,152,219,.3);border-color:var(--azul);color:#5dade2}
+  .chip.sin{background:rgba(230,59,46,.15);border-color:rgba(230,59,46,.4);color:#ff6b5e}
+  .nota-area{background:var(--gris3);border:1px solid #444;border-radius:10px;color:var(--blanco);padding:11px 13px;font-size:13px;font-family:'DM Sans',sans-serif;width:100%;resize:none;height:65px}
+  .nota-area:focus{outline:none;border-color:var(--azul)}
+  .sabor-hint{font-size:10px;color:var(--gris4);margin-top:4px}
+
+  /* DESCUENTO */
+  .desc-tipos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .desc-tipo{padding:12px;border-radius:12px;border:2px solid var(--gris3);background:var(--gris2);cursor:pointer;text-align:center}
+  .desc-tipo.activo{border-color:var(--morado);background:rgba(155,89,182,.1)}
+  .desc-tipo-ico{font-size:22px;margin-bottom:4px}
+  .desc-tipo-lbl{font-size:12px;font-weight:600;color:#c39bd3}
+  .desc-preview{background:rgba(155,89,182,.1);border:1px solid rgba(155,89,182,.3);border-radius:10px;padding:10px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#c39bd3;margin-bottom:12px}
+
+  /* CIERRE */
+  .cierre-total{background:rgba(230,59,46,.1);border:1px solid rgba(230,59,46,.3);border-radius:12px;padding:14px;text-align:center;margin-bottom:14px}
+  .cierre-total-lbl{font-size:11px;color:var(--gris4);margin-bottom:4px}
+  .cierre-total-num{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--amarillo)}
+  .cierre-desglose{display:flex;gap:8px;margin-bottom:12px}
+  .cierre-pago-box{flex:1;background:var(--gris2);border-radius:10px;padding:10px;text-align:center}
+  .cierre-pago-ico{font-size:20px;margin-bottom:4px}
+  .cierre-pago-lbl{font-size:10px;color:var(--gris4)}
+  .cierre-pago-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amarillo)}
+  .cierre-lista{background:var(--gris2);border-radius:10px;padding:10px;margin-bottom:10px;max-height:130px;overflow-y:auto}
+  .cierre-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--gris3)}
+  .cierre-row:last-child{border-bottom:none}
+  .cierre-row .lbl{color:var(--gris4)}.cierre-row .val{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--amarillo)}
+
+  .toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:var(--verde);color:white;padding:11px 22px;border-radius:28px;font-weight:600;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}.toast.err{background:var(--rojo)}
+  .btn-dash{position:fixed;bottom:16px;right:14px;background:var(--gris2);border:1px solid var(--gris3);border-radius:50px;padding:9px 14px;font-size:11px;color:var(--gris4);cursor:pointer;z-index:50;display:flex;align-items:center;gap:5px;text-decoration:none}
+  .tag-ll{display:inline-block;background:rgba(52,152,219,.2);color:#5dade2;font-size:9px;padding:2px 5px;border-radius:10px;margin-left:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><span class="alav">ÁLAV</span> <span class="erga">ERGA</span> <span style="font-size:12px;color:var(--gris4);letter-spacing:1px"> POS</span></div>
+  <div class="header-right">
+    <div class="sync-dot amarillo" id="sync-dot"></div>
+    <span class="sync-txt" id="sync-txt">...</span>
+  </div>
+</div>
+
+<div class="setup" id="setup" style="display:none">
+  <h3>⚙️ Conectar Google Sheets</h3>
+  <p>Pega la misma URL del dashboard.</p>
+  <input class="inp" id="url-inp" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:10px">
+  <button class="btn-ok" onclick="guardarURL()" style="width:100%;padding:12px;font-size:15px">✓ CONECTAR</button>
+</div>
+
+<!-- ===== VISTA CUENTAS ===== -->
+<div id="v-cuentas" class="view active">
+  <div class="row-header">
+    <div class="sec-titulo">🍗 Cuentas abiertas</div>
+    <button class="btn-nueva" onclick="openNueva()">+ Nueva</button>
+  </div>
+  <div class="dia-box" id="dia-box" style="display:none">
+    <div class="dia-titulo">📊 Acumulado esta noche</div>
+    <div class="dia-row"><span>Cuentas cobradas:</span><span class="dia-val" id="dia-n">0</span></div>
+    <div class="dia-row"><span>Efectivo:</span><span class="dia-val" id="dia-ef">$0</span></div>
+    <div class="dia-row"><span>Tarjeta:</span><span class="dia-val" id="dia-tj">$0</span></div>
+    <div class="dia-row"><span>Total:</span><span class="dia-val" id="dia-tot">$0</span></div>
+  </div>
+  <div class="grid2" id="cuentas-grid">
+    <div class="empty"><div class="ico">🍗</div><div>No hay cuentas abiertas.<br>Toca <strong>"+ Nueva"</strong> para empezar.</div></div>
+  </div>
+  <div id="cobradas-wrap" style="display:none">
+    <div class="cobradas-titulo">✅ Cobradas esta noche</div>
+    <div id="cobradas-chips"></div>
+  </div>
+  <button class="btn-cerrar" id="btn-cerrar" onclick="openCierre()" disabled>🔒 CERRAR DÍA Y REGISTRAR EN DASHBOARD</button>
+  <div class="cerrar-hint">Toca al terminar tu noche para registrar todo</div>
+</div>
+
+<!-- ===== VISTA ORDEN ===== -->
+<div id="v-orden" class="view">
+  <div class="o-header">
+    <button class="btn-back" onclick="goBack()">←</button>
+    <div class="o-info">
+      <div class="o-nombre" id="o-nombre">Cliente</div>
+      <div class="o-count" id="o-count">0 productos</div>
+    </div>
+    <button class="btn-desc-orden" onclick="openDescuento()">% Desc.</button>
+    <button class="btn-del" onclick="eliminarCuenta()">🗑</button>
+  </div>
+  <div class="cats" id="cats"></div>
+  <div class="prods-list" id="prods-list"></div>
+  <div class="flotante">
+    <div class="res-items" id="res-items"><div class="vacio">Agrega productos para empezar</div></div>
+    <div class="res-total-row">
+      <span class="res-total-lbl">Total: <span class="descuento-tag" id="desc-tag"></span></span>
+      <span class="res-total-val" id="res-total">$0</span>
+    </div>
+    <button class="btn-cobrar" id="btn-cobrar" onclick="openCobro()" disabled>💰 COBRAR</button>
+  </div>
+</div>
+
+<!-- MODAL: NUEVA CUENTA -->
+<div class="overlay" id="m-nueva">
+  <div class="sheet amarillo">
+    <div class="m-titulo amarillo">¿Nombre del cliente?</div>
+    <input class="inp" id="inp-nombre" placeholder="Ej: Axel, Para llevar, Juan..." maxlength="22">
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="setNom('Para llevar')">🥡 Para llevar</button>
+      <button class="quick-btn" onclick="setNom('Mesa 1')">🪑 Mesa 1</button>
+    </div>
+    <div class="m-btns">
+      <button class="btn-cancel" onclick="close('m-nueva')">Cancelar</button>
+      <button class="btn-ok" onclick="crearCuenta()">✓ ABRIR CUENTA</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PERSONALIZAR ITEM -->
+<div class="overlay" id="m-pers">
+  <div class="sheet azul">
+    <div class="m-titulo azul">✏️ Personalizar</div>
+    <div class="cust-prod" id="cust-nom"></div>
+
+    <div class="cust-sec" id="cust-sabores-sec">
+      <div class="cust-sec-titulo">🌶️ Salsa (máx. 2)</div>
+      <div class="chips" id="cust-sabores"></div>
+      <div class="sabor-hint" id="sabor-hint"></div>
+    </div>
+
+    <div class="cust-sec" id="cust-cond-sec">
+      <div class="cust-sec-titulo">🧂 Condimentos</div>
+      <div class="chips" id="cust-cond"></div>
+    </div>
+
+    <div class="cust-sec" id="cust-extras-sec">
+      <div class="cust-sec-titulo">🧀 Modificaciones</div>
+      <div class="chips" id="cust-extras"></div>
+    </div>
+
+    <div class="cust-sec">
+      <div class="cust-sec-titulo">📝 Nota adicional</div>
+      <textarea class="nota-area" id="nota-area" placeholder="Ej: extra picante, aparte el queso, sin sal..."></textarea>
+    </div>
+
+    <div class="m-btns">
+      <button class="btn-cancel" onclick="close('m-pers')">Cancelar</button>
+      <button class="btn-ok" onclick="guardarPers()">✓ GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DESCUENTO -->
+<div class="overlay" id="m-desc">
+  <div class="sheet morado">
+    <div class="m-titulo morado">% Descuento / Cortesía</div>
+    <div class="m-sub">Se aplicará al total de la cuenta</div>
+    <div class="desc-tipos">
+      <div class="desc-tipo" id="dt-pct" onclick="setDescTipo('pct')">
+        <div class="desc-tipo-ico">%</div>
+        <div class="desc-tipo-lbl">Porcentaje</div>
+      </div>
+      <div class="desc-tipo" id="dt-mto" onclick="setDescTipo('mto')">
+        <div class="desc-tipo-ico">$</div>
+        <div class="desc-tipo-lbl">Monto fijo</div>
+      </div>
+    </div>
+    <input class="inp" id="desc-valor" type="number" min="0" placeholder="Ej: 10 (para 10% o $10)" onInput="updateDescPreview()">
+    <div class="desc-preview" id="desc-preview">—</div>
+    <div class="m-btns">
+      <button class="btn-cancel" onclick="quitarDescuento()">Quitar desc.</button>
+      <button class="btn-ok" onclick="aplicarDescuento()">✓ APLICAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: COBRO -->
+<div class="overlay" id="m-cobro">
+  <div class="sheet verde">
+    <div class="cobro-nombre" id="cobro-nom"></div>
+    <div class="m-sub">Confirmar cobro</div>
+    <div class="cobro-items-list" id="cobro-items"></div>
+    <div class="cobro-total-box" id="cobro-total-box"></div>
+
+    <!-- Forma de pago -->
+    <div class="cust-sec-titulo" style="margin-bottom:10px">💳 Forma de pago</div>
+    <div class="pago-btns">
+      <div class="pago-btn efectivo" id="pago-ef" onclick="setPago('efectivo')">
+        <div class="pago-icono">💵</div>
+        <div class="pago-lbl efectivo">Efectivo</div>
+      </div>
+      <div class="pago-btn tarjeta" id="pago-tj" onclick="setPago('tarjeta')">
+        <div class="pago-icono">💳</div>
+        <div class="pago-lbl tarjeta">Tarjeta</div>
+      </div>
+    </div>
+
+    <div class="m-btns">
+      <button class="btn-cancel" onclick="close('m-cobro')">Cancelar</button>
+      <button class="btn-ok verde" id="btn-confirmar-cobro" onclick="confirmarCobro()">✅ COBRADO</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CIERRE DÍA -->
+<div class="overlay" id="m-cierre">
+  <div class="sheet rojo">
+    <div class="m-titulo rojo">🔒 CIERRE DEL DÍA</div>
+    <div class="m-sub">Se registrará en el dashboard como una sola noche</div>
+    <div class="cierre-total">
+      <div class="cierre-total-lbl">TOTAL DE LA NOCHE</div>
+      <div class="cierre-total-num" id="cierre-num">$0</div>
+    </div>
+    <div class="cierre-desglose">
+      <div class="cierre-pago-box">
+        <div class="cierre-pago-ico">💵</div>
+        <div class="cierre-pago-lbl">Efectivo</div>
+        <div class="cierre-pago-val" id="cierre-ef">$0</div>
+      </div>
+      <div class="cierre-pago-box">
+        <div class="cierre-pago-ico">💳</div>
+        <div class="cierre-pago-lbl">Tarjeta</div>
+        <div class="cierre-pago-val" id="cierre-tj">$0</div>
+      </div>
+    </div>
+    <div class="cierre-lista" id="cierre-prods"></div>
+    <div class="cierre-lista" id="cierre-cuentas"></div>
+    <div class="m-btns">
+      <button class="btn-cancel" onclick="close('m-cierre')">Cancelar</button>
+      <button class="btn-ok rojo" onclick="confirmarCierre()">🔒 CONFIRMAR CIERRE</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<a href="https://falh190404-maker.github.io/ALAV-ERGA/alaverga-dashboard-v2.html" class="btn-dash" id="btn-dash" style="display:none">📊 Dashboard</a>
+
+<script>
+// ===== DATOS =====
+const PRODS = [
+  {id:'p1',  nombre:'Alitas Grande c/papas',   precio:150, costo:81.22, cat:'Alitas',   sabores:true, condimentos:true, extras:['Con queso','Sin queso','Papas al gusto','Sin papas']},
+  {id:'p2',  nombre:'Alitas Chica c/papas',    precio:110, costo:40.47, cat:'Alitas',   sabores:true, condimentos:true, extras:['Con queso','Sin queso','Papas al gusto','Sin papas']},
+  {id:'p3',  nombre:'Alitas Chica s/papas',    precio:90,  costo:36.21, cat:'Alitas',   sabores:true, condimentos:true, extras:[]},
+  {id:'p4',  nombre:'Boneless Grande c/papas', precio:160, costo:75.80, cat:'Boneless', sabores:true, condimentos:true, extras:['Con queso','Sin queso','Papas al gusto','Sin papas']},
+  {id:'p5',  nombre:'Boneless Chico c/papas',  precio:120, costo:38.46, cat:'Boneless', sabores:true, condimentos:true, extras:['Con queso','Sin queso','Papas al gusto','Sin papas']},
+  {id:'p6',  nombre:'Boneless Chico s/papas',  precio:100, costo:27.01, cat:'Boneless', sabores:true, condimentos:true, extras:[]},
+  {id:'p7',  nombre:'Papas solas',             precio:65,  costo:22.71, cat:'Papas',    sabores:false, condimentos:true, cond:['Queso','Catsup','Valentina'], extras:['Sin queso','Sin catsup','Sin Valentina','Con todo','Sin todo']},
+  {id:'p8',  nombre:'Refresco',                precio:25,  costo:16.00, cat:'Bebidas',  sabores:false, condimentos:false, extras:[]},
+  {id:'p9',  nombre:'Ranch (vaso)',            precio:10,  costo:3.37,  cat:'Extras',   sabores:false, condimentos:false, extras:[]},
+  {id:'p10', nombre:'Paleta de hielo',         precio:25,  costo:10.00, cat:'Bebidas',  sabores:false, condimentos:false, extras:[]},
+];
+
+const SABORES = ['BBQ 🍯','Mango Habanero 🥭','Tamarindo 🍬','Buffalo 🔥','Lemon Pepper 🍋'];
+const CONDIMENTOS = ['Maggi ✅','Sin Maggi','Inglesa ✅','Sin Inglesa','Valentina ✅','Sin Valentina','Tajín ✅','Sin Tajín','Limón ✅','Sin Limón'];
+const CATS = ['Todos','Alitas','Boneless','Papas','Bebidas','Extras'];
+
+// ===== ESTADO =====
+let cuentas = {};
+let cuentaActiva = null;
+let catActiva = 'Todos';
+let cuentasCobradas = [];
+let persIdx = null;
+let descTipo = 'pct';
+let pagoActual = null;
+let SCRIPT_URL = localStorage.getItem('alaverga_url') || '';
+
+// ===== SETUP =====
+function guardarURL() {
+  const url = document.getElementById('url-inp').value.trim();
+  if (!url.startsWith('https://script.google.com')) { toast('URL incorrecta', true); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem('alaverga_url', url);
+  document.getElementById('setup').style.display = 'none';
+  setSyncStatus('verde', 'Conectado ✓');
+  document.getElementById('btn-dash').style.display = 'flex';
+}
+
+if (SCRIPT_URL) {
+  document.getElementById('setup').style.display = 'none';
+  setSyncStatus('verde', 'Conectado ✓');
+  document.getElementById('btn-dash').style.display = 'flex';
+} else {
+  document.getElementById('setup').style.display = 'block';
+  setSyncStatus('rojo', 'Sin conexión');
+}
+
+function setSyncStatus(e,t){ document.getElementById('sync-dot').className='sync-dot '+e; document.getElementById('sync-txt').textContent=t; }
+function close(id){ document.getElementById(id).classList.remove('active'); }
+function toast(msg, err=false){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); setTimeout(()=>t.className='toast',3000); }
+
+// ===== CUENTAS =====
+function renderCuentas() {
+  const grid = document.getElementById('cuentas-grid');
+  const ids = Object.keys(cuentas);
+  if (!ids.length) {
+    grid.innerHTML = '<div class="empty"><div class="ico">🍗</div><div>No hay cuentas abiertas.<br>Toca <strong>"+ Nueva"</strong> para empezar.</div></div>';
+  } else {
+    grid.innerHTML = ids.map(id => {
+      const c = cuentas[id];
+      const total = calcTotal(c);
+      const num = c.items.reduce((s,i)=>s+i.qty,0);
+      const ll = c.nombre.toLowerCase().includes('llevar');
+      return `<div class="cuenta-card" onclick="abrirCuenta('${id}')">
+        <div class="c-badge"></div>
+        <div class="c-nombre">${c.nombre}${ll?'<span class="tag-ll">🥡</span>':''}</div>
+        <div class="c-items">${num} producto${num!==1?'s':''}</div>
+        <div class="c-total">$${total}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const totalDia = cuentasCobradas.reduce((s,c)=>s+c.totalFinal,0);
+  const ef = cuentasCobradas.filter(c=>c.pago==='efectivo').reduce((s,c)=>s+c.totalFinal,0);
+  const tj = cuentasCobradas.filter(c=>c.pago==='tarjeta').reduce((s,c)=>s+c.totalFinal,0);
+  const diaBox = document.getElementById('dia-box');
+  if (cuentasCobradas.length > 0) {
+    diaBox.style.display = 'block';
+    document.getElementById('dia-n').textContent = cuentasCobradas.length;
+    document.getElementById('dia-ef').textContent = '$'+ef;
+    document.getElementById('dia-tj').textContent = '$'+tj;
+    document.getElementById('dia-tot').textContent = '$'+totalDia;
+  } else { diaBox.style.display = 'none'; }
+
+  const cobWrap = document.getElementById('cobradas-wrap');
+  if (cuentasCobradas.length > 0) {
+    cobWrap.style.display = 'block';
+    document.getElementById('cobradas-chips').innerHTML = cuentasCobradas.map(c=>{
+      const ico = c.pago==='efectivo'?'💵':'💳';
+      return `<span class="chip-cobrada">${ico} ${c.nombre} $${c.totalFinal}</span>`;
+    }).join('');
+  } else { cobWrap.style.display = 'none'; }
+
+  document.getElementById('btn-cerrar').disabled = cuentasCobradas.length === 0;
+}
+
+function openNueva() {
+  document.getElementById('inp-nombre').value = '';
+  document.getElementById('m-nueva').classList.add('active');
+  setTimeout(()=>document.getElementById('inp-nombre').focus(), 300);
+}
+
+function setNom(n) { document.getElementById('inp-nombre').value = n; }
+
+function crearCuenta() {
+  const nombre = document.getElementById('inp-nombre').value.trim();
+  if (!nombre) { toast('Escribe un nombre', true); return; }
+  const id = 'c_'+Date.now();
+  cuentas[id] = {nombre, items:[], descTipo:'pct', descValor:0, ts:Date.now()};
+  close('m-nueva');
+  renderCuentas();
+  abrirCuenta(id);
+}
+
+function abrirCuenta(id) {
+  cuentaActiva = id;
+  document.getElementById('o-nombre').textContent = cuentas[id].nombre;
+  document.getElementById('v-cuentas').classList.remove('active');
+  document.getElementById('v-orden').classList.add('active');
+  catActiva = 'Todos';
+  renderCats();
+  renderProds();
+  renderResumen();
+}
+
+function goBack() {
+  cuentaActiva = null;
+  document.getElementById('v-orden').classList.remove('active');
+  document.getElementById('v-cuentas').classList.add('active');
+  renderCuentas();
+}
+
+function eliminarCuenta() {
+  if (!confirm('¿Eliminar cuenta de '+cuentas[cuentaActiva].nombre+'?')) return;
+  delete cuentas[cuentaActiva];
+  goBack();
+}
+
+// ===== CATEGORÍAS Y PRODUCTOS =====
+function renderCats() {
+  document.getElementById('cats').innerHTML = CATS.map(c=>
+    `<button class="cat-btn ${c===catActiva?'active':''}" onclick="selCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function selCat(cat) { catActiva=cat; renderCats(); renderProds(); }
+
+function renderProds() {
+  const prods = catActiva==='Todos' ? PRODS : PRODS.filter(p=>p.cat===catActiva);
+  const c = cuentas[cuentaActiva];
+  document.getElementById('prods-list').innerHTML = prods.map(p => {
+    const qty = c.items.filter(i=>i.id===p.id).reduce((s,i)=>s+i.qty,0);
+    return `<button class="prod-row" onclick="agregarProd('${p.id}')">
+      <div class="p-info">
+        <div class="p-nom">${p.nombre}${qty>0?` <span style="color:var(--amarillo)">×${qty}</span>`:''}</div>
+        <div class="p-prec">$${p.precio}</div>
+      </div>
+      <div class="p-add">+</div>
+    </button>`;
+  }).join('');
+}
+
+function agregarProd(prodId) {
+  const p = PRODS.find(x=>x.id===prodId);
+  cuentas[cuentaActiva].items.push({
+    id:prodId, nombre:p.nombre, precio:p.precio, costo:p.costo, qty:1,
+    sabores:[], condimentos:[], extras:[], nota:''
+  });
+  renderProds();
+  renderResumen();
+}
+
+// ===== CÁLCULOS =====
+function calcSubtotal(c) { return c.items.reduce((s,i)=>s+i.precio*i.qty,0); }
+
+function calcDescuento(c) {
+  const sub = calcSubtotal(c);
+  if (!c.descValor) return 0;
+  if (c.descTipo==='pct') return Math.round(sub * c.descValor / 100);
+  return Math.min(c.descValor, sub);
+}
+
+function calcTotal(c) { return calcSubtotal(c) - calcDescuento(c); }
+
+function buildNota(item) {
+  const p = [];
+  if (item.sabores && item.sabores.length) p.push(item.sabores.join(' + '));
+  if (item.condimentos && item.condimentos.length) p.push(item.condimentos.join(', '));
+  if (item.extras && item.extras.length) p.push(item.extras.join(', '));
+  if (item.nota) p.push(item.nota);
+  return p.join(' · ');
+}
+
+// ===== RESUMEN =====
+function renderResumen() {
+  const c = cuentas[cuentaActiva];
+  const sub = calcSubtotal(c);
+  const desc = calcDescuento(c);
+  const total = sub - desc;
+  const num = c.items.reduce((s,i)=>s+i.qty,0);
+
+  document.getElementById('o-count').textContent = `${num} producto${num!==1?'s':''}`;
+  document.getElementById('res-total').textContent = '$'+total;
+  document.getElementById('btn-cobrar').disabled = !c.items.length;
+
+  const descTag = document.getElementById('desc-tag');
+  if (desc > 0) {
+    descTag.textContent = `(-$${desc} desc.)`;
+  } else { descTag.textContent = ''; }
+
+  if (!c.items.length) {
+    document.getElementById('res-items').innerHTML = '<div class="vacio">Agrega productos para empezar</div>';
+    return;
+  }
+
+  document.getElementById('res-items').innerHTML = c.items.map((item,idx)=>{
+    const nota = buildNota(item);
+    return `<div class="res-item">
+      <div class="res-item-row">
+        <span class="res-nom">${item.nombre.split(' ').slice(0,2).join(' ')}</span>
+        <div class="res-ctrls">
+          <button class="c-btn" onclick="chgQty(${idx},-1)">−</button>
+          <span class="c-qty">${item.qty}</span>
+          <button class="c-btn" onclick="chgQty(${idx},1)">+</button>
+          <span class="c-precio">$${item.precio*item.qty}</span>
+        </div>
+      </div>
+      <button class="btn-pers" onclick="openPers(${idx})">✏️ Personalizar</button>
+      ${nota?`<div class="nota-tag">📌 ${nota}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function chgQty(idx, d) {
+  const c = cuentas[cuentaActiva];
+  c.items[idx].qty += d;
+  if (c.items[idx].qty <= 0) c.items.splice(idx,1);
+  renderProds();
+  renderResumen();
+}
+
+// ===== PERSONALIZAR =====
+function openPers(idx) {
+  persIdx = idx;
+  const item = cuentas[cuentaActiva].items[idx];
+  const prod = PRODS.find(p=>p.id===item.id);
+
+  document.getElementById('cust-nom').textContent = item.nombre;
+  document.getElementById('nota-area').value = item.nota||'';
+
+  // Sabores
+  const sabSec = document.getElementById('cust-sabores-sec');
+  if (prod.sabores) {
+    sabSec.style.display = 'block';
+    renderChipsSabores(item);
+  } else { sabSec.style.display = 'none'; }
+
+  // Condimentos
+  const condSec = document.getElementById('cust-cond-sec');
+  if (prod.condimentos) {
+    condSec.style.display = 'block';
+    renderChipsCond(item);
+  } else { condSec.style.display = 'none'; }
+
+  // Extras
+  const extSec = document.getElementById('cust-extras-sec');
+  if (prod.extras && prod.extras.length) {
+    extSec.style.display = 'block';
+    document.getElementById('cust-extras').innerHTML = prod.extras.map(e=>
+      `<button class="chip ${(item.extras||[]).includes(e)?'on-extra':''}" onclick="toggleExtra('${e}')">${e}</button>`
+    ).join('');
+  } else { extSec.style.display = 'none'; }
+
+  document.getElementById('m-pers').classList.add('active');
+}
+
+function renderChipsSabores(item) {
+  const sel = item.sabores||[];
+  document.getElementById('cust-sabores').innerHTML = SABORES.map(s=>
+    `<button class="chip ${sel.includes(s)?'on-sabor':''}" onclick="toggleSabor('${s}')">${s}</button>`
+  ).join('');
+  const hint = document.getElementById('sabor-hint');
+  hint.textContent = sel.length >= 2 ? '⚠️ Máximo 2 sabores seleccionados' : `${sel.length}/2 sabores`;
+}
+
+function renderChipsCond(item) {
+  const sel = item.condimentos||[];
+  document.getElementById('cust-cond').innerHTML = CONDIMENTOS.map(c=>
+    `<button class="chip ${sel.includes(c)?'on-cond':''}" onclick="toggleCond('${c}')">${c}</button>`
+  ).join('');
+}
+
+function toggleSabor(s) {
+  const item = cuentas[cuentaActiva].items[persIdx];
+  if (!item.sabores) item.sabores = [];
+  const idx = item.sabores.indexOf(s);
+  if (idx >= 0) { item.sabores.splice(idx,1); }
+  else {
+    if (item.sabores.length >= 2) { toast('Máximo 2 sabores', true); return; }
+    item.sabores.push(s);
+  }
+  renderChipsSabores(item);
+}
+
+function toggleCond(c) {
+  const item = cuentas[cuentaActiva].items[persIdx];
+  if (!item.condimentos) item.condimentos = [];
+  const idx = item.condimentos.indexOf(c);
+  if (idx >= 0) item.condimentos.splice(idx,1);
+  else item.condimentos.push(c);
+  renderChipsCond(item);
+}
+
+function toggleExtra(e) {
+  const item = cuentas[cuentaActiva].items[persIdx];
+  if (!item.extras) item.extras = [];
+  const idx = item.extras.indexOf(e);
+  if (idx >= 0) item.extras.splice(idx,1);
+  else item.extras.push(e);
+  const prod = PRODS.find(p=>p.id===item.id);
+  document.getElementById('cust-extras').innerHTML = prod.extras.map(ex=>
+    `<button class="chip ${item.extras.includes(ex)?'on-extra':''}" onclick="toggleExtra('${ex}')">${ex}</button>`
+  ).join('');
+}
+
+function guardarPers() {
+  const item = cuentas[cuentaActiva].items[persIdx];
+  item.nota = document.getElementById('nota-area').value.trim();
+  close('m-pers');
+  renderResumen();
+  toast('✅ Personalización guardada');
+}
+
+// ===== DESCUENTO =====
+function openDescuento() {
+  const c = cuentas[cuentaActiva];
+  descTipo = c.descTipo || 'pct';
+  document.getElementById('desc-valor').value = c.descValor || '';
+  setDescTipo(descTipo);
+  updateDescPreview();
+  document.getElementById('m-desc').classList.add('active');
+}
+
+function setDescTipo(tipo) {
+  descTipo = tipo;
+  document.getElementById('dt-pct').classList.toggle('activo', tipo==='pct');
+  document.getElementById('dt-mto').classList.toggle('activo', tipo==='mto');
+  updateDescPreview();
+}
+
+function updateDescPreview() {
+  const val = parseFloat(document.getElementById('desc-valor').value) || 0;
+  const c = cuentas[cuentaActiva];
+  const sub = calcSubtotal(c);
+  let descMonto = 0;
+  if (descTipo==='pct') descMonto = Math.round(sub * val / 100);
+  else descMonto = Math.min(val, sub);
+  const nuevo = sub - descMonto;
+  document.getElementById('desc-preview').textContent = val > 0 ? `-$${descMonto} → Total: $${nuevo}` : '—';
+}
+
+function aplicarDescuento() {
+  const val = parseFloat(document.getElementById('desc-valor').value) || 0;
+  if (val <= 0) { toast('Ingresa un valor válido', true); return; }
+  const c = cuentas[cuentaActiva];
+  c.descTipo = descTipo;
+  c.descValor = val;
+  close('m-desc');
+  renderResumen();
+  toast('✅ Descuento aplicado');
+}
+
+function quitarDescuento() {
+  const c = cuentas[cuentaActiva];
+  c.descValor = 0;
+  close('m-desc');
+  renderResumen();
+  toast('Descuento eliminado');
+}
+
+// ===== COBRO =====
+function openCobro() {
+  pagoActual = null;
+  setPago(null);
+  const c = cuentas[cuentaActiva];
+  const sub = calcSubtotal(c);
+  const desc = calcDescuento(c);
+  const total = sub - desc;
+
+  document.getElementById('cobro-nom').textContent = c.nombre;
+  document.getElementById('cobro-items').innerHTML = c.items.map(item=>{
+    const nota = buildNota(item);
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--gris3)">
+      <div class="cobro-item-row"><span>${item.nombre} ×${item.qty}</span><span>$${item.precio*item.qty}</span></div>
+      ${nota?`<div class="cobro-item-nota">📌 ${nota}</div>`:''}
+    </div>`;
+  }).join('');
+
+  let totalHTML = `<div class="cobro-total-row"><span class="lbl">Subtotal</span><span class="val">$${sub}</span></div>`;
+  if (desc > 0) totalHTML += `<div class="cobro-total-row desc"><span class="lbl">Descuento</span><span class="val">-$${desc}</span></div>`;
+  totalHTML += `<div class="cobro-total-row grande"><span class="lbl" style="font-family:'Bebas Neue';font-size:16px;letter-spacing:2px;color:var(--amarillo)">TOTAL</span><span class="val">$${total}</span></div>`;
+  document.getElementById('cobro-total-box').innerHTML = totalHTML;
+
+  document.getElementById('m-cobro').classList.add('active');
+}
+
+function setPago(tipo) {
+  pagoActual = tipo;
+  document.getElementById('pago-ef').classList.toggle('activo', tipo==='efectivo');
+  document.getElementById('pago-tj').classList.toggle('activo', tipo==='tarjeta');
+  document.getElementById('btn-confirmar-cobro').disabled = !tipo;
+}
+
+function confirmarCobro() {
+  if (!pagoActual) { toast('Selecciona forma de pago', true); return; }
+  const c = cuentas[cuentaActiva];
+  const totalFinal = calcTotal(c);
+  cuentasCobradas.push({
+    nombre: c.nombre,
+    totalFinal,
+    pago: pagoActual,
+    items: [...c.items]
+  });
+  close('m-cobro');
+  const nombre = c.nombre;
+  const ico = pagoActual==='efectivo'?'💵':'💳';
+  delete cuentas[cuentaActiva];
+  toast(`✅ ${ico} $${totalFinal} cobrado — ${nombre}`);
+  goBack();
+}
+
+// ===== CIERRE DÍA =====
+function openCierre() {
+  const totalDia = cuentasCobradas.reduce((s,c)=>s+c.totalFinal,0);
+  const ef = cuentasCobradas.filter(c=>c.pago==='efectivo').reduce((s,c)=>s+c.totalFinal,0);
+  const tj = cuentasCobradas.filter(c=>c.pago==='tarjeta').reduce((s,c)=>s+c.totalFinal,0);
+
+  document.getElementById('cierre-num').textContent = '$'+totalDia;
+  document.getElementById('cierre-ef').textContent = '$'+ef;
+  document.getElementById('cierre-tj').textContent = '$'+tj;
+
+  // Agrupar productos
+  const agrup = {};
+  cuentasCobradas.forEach(c=>c.items.forEach(item=>{
+    if (!agrup[item.nombre]) agrup[item.nombre]={nombre:item.nombre,qty:0,venta:0,costo:0,util:0};
+    agrup[item.nombre].qty+=item.qty;
+    agrup[item.nombre].venta+=item.precio*item.qty;
+    agrup[item.nombre].costo+=item.costo*item.qty;
+    agrup[item.nombre].util+=(item.precio-item.costo)*item.qty;
+  }));
+
+  document.getElementById('cierre-prods').innerHTML = Object.values(agrup).map(p=>
+    `<div class="cierre-row"><span class="lbl">${p.nombre.split(' ').slice(0,2).join(' ')} ×${p.qty}</span><span class="val">$${p.venta}</span></div>`
+  ).join('');
+
+  document.getElementById('cierre-cuentas').innerHTML = cuentasCobradas.map(c=>{
+    const ico = c.pago==='efectivo'?'💵':'💳';
+    return `<div class="cierre-row"><span class="lbl">${ico} ${c.nombre}</span><span class="val">$${c.totalFinal}</span></div>`;
+  }).join('');
+
+  document.getElementById('m-cierre').classList.add('active');
+}
+
+async function confirmarCierre() {
+  const totalDia = cuentasCobradas.reduce((s,c)=>s+c.totalFinal,0);
+  const fecha = new Date().toISOString().split('T')[0];
+  const nocheID = fecha+'_'+Date.now();
+
+  const agrup = {};
+  cuentasCobradas.forEach(c=>c.items.forEach(item=>{
+    if (!agrup[item.nombre]) agrup[item.nombre]={nombre:item.nombre,qty:0,venta:0,costo:0,util:0};
+    agrup[item.nombre].qty+=item.qty;
+    agrup[item.nombre].venta+=item.precio*item.qty;
+    agrup[item.nombre].costo+=item.costo*item.qty;
+    agrup[item.nombre].util+=(item.precio-item.costo)*item.qty;
+  }));
+
+  const items = Object.values(agrup);
+  close('m-cierre');
+  setSyncStatus('amarillo','Guardando...');
+
+  try {
+    if (SCRIPT_URL) {
+      await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({tipo:'venta',fecha,items,nocheID,ts:Date.now()})});
+      setSyncStatus('verde','Guardado ✓');
+      toast(`🎉 Noche cerrada — Total: $${totalDia}`);
+    } else {
+      toast('Sin conexión', true);
+    }
+  } catch(e) {
+    setSyncStatus('rojo','Error');
+    toast('Error al guardar', true);
+  }
+
+  cuentasCobradas = [];
+  renderCuentas();
+}
+
+// ===== INIT =====
+document.getElementById('inp-nombre').addEventListener('keydown', e=>{if(e.key==='Enter')crearCuenta();});
+document.getElementById('btn-confirmar-cobro').disabled = true;
+renderCuentas();
+</script>
+</body>
+</html>
