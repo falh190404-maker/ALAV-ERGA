@@ -411,6 +411,8 @@ let persIdx = null;
 let descTipo = 'pct';
 let pagoActual = null;
 let SCRIPT_URL = localStorage.getItem('alaverga_url') || '';
+let syncInterval = null;
+let lastSyncTs = 0;
 
 // ===== SETUP =====
 function guardarURL() {
@@ -435,6 +437,88 @@ if (SCRIPT_URL) {
 function setSyncStatus(e,t){ document.getElementById('sync-dot').className='sync-dot '+e; document.getElementById('sync-txt').textContent=t; }
 function close(id){ document.getElementById(id).classList.remove('active'); }
 function toast(msg, err=false){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); setTimeout(()=>t.className='toast',3000); }
+
+// ===== SINCRONIZACIÓN EN TIEMPO REAL =====
+
+async function pushCuenta(id) {
+  if (!SCRIPT_URL) return;
+  const c = cuentas[id];
+  if (!c) return;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        tipo: 'cuenta_update',
+        id: id,
+        nombre: c.nombre,
+        items: c.items,
+        total: calcTotal(c),
+        estado: 'abierta',
+        ts: Date.now()
+      })
+    });
+  } catch(e) {}
+}
+
+async function pushCuentaCerrada(id, pago) {
+  if (!SCRIPT_URL) return;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ tipo: 'cuenta_cerrar', id, pago })
+    });
+  } catch(e) {}
+}
+
+async function pullCuentas() {
+  if (!SCRIPT_URL) return;
+  try {
+    setSyncStatus('amarillo', 'Sincronizando...');
+    const res = await fetch(SCRIPT_URL + '?tipo=pos&ts=' + Date.now());
+    const data = await res.json();
+    if (!data.cuentas) return;
+
+    // Merge: agregar cuentas nuevas que no tenemos localmente
+    let huboNuevas = false;
+    data.cuentas.forEach(c => {
+      if (!cuentas[c.id]) {
+        cuentas[c.id] = { nombre: c.nombre, items: c.items, ts: c.ts };
+        huboNuevas = true;
+      } else {
+        // Si la versión remota es más nueva, actualizar
+        if (c.ts > (cuentas[c.id].ts||0)) {
+          cuentas[c.id].items = c.items;
+          cuentas[c.id].ts = c.ts;
+          huboNuevas = true;
+        }
+      }
+    });
+
+    // Eliminar cuentas que ya fueron cobradas en otro cel
+    const idsRemotos = data.cuentas.map(c=>c.id);
+    Object.keys(cuentas).forEach(id => {
+      if (!idsRemotos.includes(id) && cuentas[id].sincronizado) {
+        if (cuentaActiva === id) { cuentaActiva = null; }
+        delete cuentas[id];
+        huboNuevas = true;
+      }
+    });
+
+    // Marcar todas como sincronizadas
+    Object.keys(cuentas).forEach(id => { cuentas[id].sincronizado = true; });
+
+    if (huboNuevas && !cuentaActiva) renderCuentas();
+    setSyncStatus('verde', 'En vivo ✓');
+  } catch(e) {
+    setSyncStatus('rojo', 'Sin conexión');
+  }
+}
+
+function iniciarSync() {
+  pullCuentas();
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(pullCuentas, 5000);
+}
 
 // ===== CUENTAS =====
 function renderCuentas() {
@@ -493,8 +577,9 @@ function crearCuenta() {
   const nombre = document.getElementById('inp-nombre').value.trim();
   if (!nombre) { toast('Escribe un nombre', true); return; }
   const id = 'c_'+Date.now();
-  cuentas[id] = {nombre, items:[], descTipo:'pct', descValor:0, ts:Date.now()};
+  cuentas[id] = {nombre, items:[], descTipo:'pct', descValor:0, ts:Date.now(), sincronizado:false};
   close('m-nueva');
+  pushCuenta(id);
   renderCuentas();
   abrirCuenta(id);
 }
@@ -555,6 +640,7 @@ function agregarProd(prodId) {
   });
   renderProds();
   renderResumen();
+  pushCuenta(cuentaActiva);
 }
 
 // ===== CÁLCULOS =====
@@ -813,6 +899,7 @@ function confirmarCobro() {
   close('m-cobro');
   const nombre = c.nombre;
   const ico = pagoActual==='efectivo'?'💵':'💳';
+  pushCuentaCerrada(cuentaActiva, pagoActual);
   delete cuentas[cuentaActiva];
   toast(`✅ ${ico} $${totalFinal} cobrado — ${nombre}`);
   goBack();
@@ -889,6 +976,7 @@ async function confirmarCierre() {
 document.getElementById('inp-nombre').addEventListener('keydown', e=>{if(e.key==='Enter')crearCuenta();});
 document.getElementById('btn-confirmar-cobro').disabled = true;
 renderCuentas();
+iniciarSync();
 </script>
 </body>
 </html>
