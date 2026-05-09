@@ -482,7 +482,7 @@ async function pullCuentas() {
     let huboNuevas = false;
     data.cuentas.forEach(c => {
       if (!cuentas[c.id]) {
-        cuentas[c.id] = { nombre: c.nombre, items: c.items, ts: c.ts };
+        cuentas[c.id] = { nombre: c.nombre, items: c.items, ts: c.ts, descTipo:'pct', descValor:0, sincronizado:true };
         huboNuevas = true;
       } else {
         // Si la versión remota es más nueva, actualizar
@@ -507,7 +507,10 @@ async function pullCuentas() {
     // Marcar todas como sincronizadas
     Object.keys(cuentas).forEach(id => { cuentas[id].sincronizado = true; });
 
-    if (huboNuevas && !cuentaActiva) renderCuentas();
+    if (huboNuevas) {
+      renderCuentas();
+      if (cuentaActiva && cuentas[cuentaActiva]) renderResumen();
+    }
     setSyncStatus('verde', 'En vivo ✓');
   } catch(e) {
     setSyncStatus('rojo', 'Sin conexión');
